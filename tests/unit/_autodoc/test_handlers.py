@@ -8,7 +8,6 @@ from sphinxcontrib.pydantic._autodoc._handlers import (
     should_skip_member,
 )
 from tests.assets.models.basic import SimpleModel
-from tests.assets.models.validators import SingleFieldValidator
 
 
 class TestIsPydanticInternal:

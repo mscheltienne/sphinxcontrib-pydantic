@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 
 from docutils import nodes
-from docutils.parsers.rst import directives
 from sphinx.util import logging
 
 from sphinxcontrib.pydantic._directives._model import PydanticModelDirective

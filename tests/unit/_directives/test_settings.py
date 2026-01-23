@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from sphinxcontrib.pydantic._directives._base import PydanticDirective
+from sphinxcontrib.pydantic._directives._model import PydanticModelDirective
 from sphinxcontrib.pydantic._directives._settings import (
     AutoPydanticSettingsDirective,
     PydanticSettingsDirective,
 )
-from sphinxcontrib.pydantic._directives._base import PydanticDirective
-from sphinxcontrib.pydantic._directives._model import PydanticModelDirective
 
 
 class TestPydanticSettingsDirective:
@@ -58,7 +58,5 @@ class TestAutoPydanticSettingsDirective:
         assert AutoPydanticSettingsDirective is not None
 
     def test_inherits_from_settings_directive(self) -> None:
-        """Test that AutoPydanticSettingsDirective inherits from PydanticSettingsDirective."""
-        assert issubclass(
-            AutoPydanticSettingsDirective, PydanticSettingsDirective
-        )
+        """Test that AutoPydanticSettingsDirective inherits from settings."""
+        assert issubclass(AutoPydanticSettingsDirective, PydanticSettingsDirective)

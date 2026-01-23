@@ -11,11 +11,6 @@ from sphinxcontrib.pydantic._inspection._model import (
     is_pydantic_model,
     is_pydantic_settings,
 )
-from sphinxcontrib.pydantic._inspection._schema import (
-    SchemaInfo,
-    generate_json_schema,
-    get_schema_info,
-)
 from sphinxcontrib.pydantic._inspection._validator import (
     ValidatorInfo,
     get_validator_info,

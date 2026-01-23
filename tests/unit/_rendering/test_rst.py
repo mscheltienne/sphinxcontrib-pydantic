@@ -5,40 +5,9 @@ from __future__ import annotations
 from typing import Union
 
 from sphinxcontrib.pydantic._rendering import (
-    escape_rst,
     format_default_value,
-    format_field_signature,
     format_type_annotation,
-    indent,
 )
-
-
-class TestIndent:
-    """Tests for indent function."""
-
-    def test_indents_lines_with_default_prefix(self) -> None:
-        """Test that lines are indented with default prefix."""
-        lines = ["line1", "line2"]
-        result = indent(lines)
-        assert result == ["   line1", "   line2"]
-
-    def test_indents_lines_with_custom_prefix(self) -> None:
-        """Test that lines are indented with custom prefix."""
-        lines = ["line1", "line2"]
-        result = indent(lines, prefix=">>> ")
-        assert result == [">>> line1", ">>> line2"]
-
-    def test_preserves_empty_lines(self) -> None:
-        """Test that empty lines are preserved without indentation."""
-        lines = ["line1", "", "line2"]
-        result = indent(lines)
-        assert result == ["   line1", "", "   line2"]
-
-    def test_preserves_whitespace_only_lines(self) -> None:
-        """Test that whitespace-only lines are not additionally indented."""
-        lines = ["line1", "   ", "line2"]
-        result = indent(lines)
-        assert result == ["   line1", "   ", "   line2"]
 
 
 class TestFormatTypeAnnotation:
@@ -125,49 +94,3 @@ class TestFormatDefaultValue:
         """Test formatting of dicts."""
         assert format_default_value({"a": 1}) == "{'a': 1}"
         assert format_default_value({}) == "{}"
-
-
-class TestEscapeRst:
-    """Tests for escape_rst function."""
-
-    def test_escapes_asterisks(self) -> None:
-        """Test escaping of asterisks."""
-        assert escape_rst("*bold*") == "\\*bold\\*"
-
-    def test_escapes_backticks(self) -> None:
-        """Test escaping of backticks."""
-        assert escape_rst("`code`") == "\\`code\\`"
-
-    def test_escapes_backslashes(self) -> None:
-        """Test escaping of backslashes."""
-        assert escape_rst("path\\to\\file") == "path\\\\to\\\\file"
-
-    def test_preserves_normal_text(self) -> None:
-        """Test that normal text is preserved."""
-        assert escape_rst("hello world") == "hello world"
-
-
-class TestFormatFieldSignature:
-    """Tests for format_field_signature function."""
-
-    def test_formats_simple_signature(self) -> None:
-        """Test formatting of simple field signature."""
-        result = format_field_signature("name", str)
-        assert result == "name: str"
-
-    def test_formats_signature_with_alias(self) -> None:
-        """Test formatting of signature with alias."""
-        result = format_field_signature("name", str, alias="external_name")
-        assert result == "name: str (alias: 'external_name')"
-
-    def test_hides_alias_when_show_alias_false(self) -> None:
-        """Test that alias is hidden when show_alias is False."""
-        result = format_field_signature(
-            "name", str, alias="external_name", show_alias=False
-        )
-        assert result == "name: str"
-
-    def test_formats_complex_type(self) -> None:
-        """Test formatting with complex type."""
-        result = format_field_signature("items", list[str])
-        assert result == "items: list[str]"

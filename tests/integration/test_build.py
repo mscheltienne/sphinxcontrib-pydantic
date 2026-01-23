@@ -26,10 +26,7 @@ class TestSphinxBuild:
             'exclude_patterns = ["_build"]\n'
         )
         (srcdir / "index.rst").write_text(
-            "Test Project\n"
-            "============\n"
-            "\n"
-            "This is a test.\n"
+            "Test Project\n============\n\nThis is a test.\n"
         )
 
         app = make_app(srcdir=srcdir)

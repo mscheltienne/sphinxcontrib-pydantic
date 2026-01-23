@@ -107,7 +107,9 @@ class TestAutodocIntegration:
         html_content = (outdir / "index.html").read_text()
 
         # Pydantic internal attributes should not appear
-        assert "model_fields" not in html_content or "model_fields =" not in html_content
+        assert (
+            "model_fields" not in html_content or "model_fields =" not in html_content
+        )
         assert "__pydantic_complete__" not in html_content
         assert "__pydantic_decorators__" not in html_content
 
@@ -124,7 +126,7 @@ class TestAutodocIntegration:
             'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
             'project = "Test"\n'
             'exclude_patterns = ["_build"]\n'
-            'sphinxcontrib_pydantic_model_show_field_summary = True\n'
+            "sphinxcontrib_pydantic_model_show_field_summary = True\n"
         )
         (srcdir / "index.rst").write_text(
             "Test Project\n"
@@ -233,7 +235,7 @@ class TestConfigurationEffects:
             'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
             'project = "Test"\n'
             'exclude_patterns = ["_build"]\n'
-            'sphinxcontrib_pydantic_model_show_field_summary = False\n'
+            "sphinxcontrib_pydantic_model_show_field_summary = False\n"
         )
         (srcdir / "index.rst").write_text(
             "Test Project\n"
