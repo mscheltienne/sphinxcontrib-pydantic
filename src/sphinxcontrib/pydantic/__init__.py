@@ -19,11 +19,6 @@ if TYPE_CHECKING:
 
     from sphinx.application import Sphinx
 
-__all__ = [
-    "__version__",
-    "setup",
-]
-
 _logger = logging.getLogger(__name__)
 
 

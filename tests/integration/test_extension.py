@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
-import pytest
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from sphinx.testing.util import SphinxTestApp
+from docutils.parsers.rst import directives
+from sphinx.testing.util import SphinxTestApp
 
 
 class TestExtensionSetup:
@@ -52,7 +48,9 @@ class TestConfigRegistration:
 
         assert hasattr(app.config, "sphinxcontrib_pydantic_model_show_json")
         assert hasattr(app.config, "sphinxcontrib_pydantic_model_show_field_summary")
-        assert hasattr(app.config, "sphinxcontrib_pydantic_model_show_validator_summary")
+        assert hasattr(
+            app.config, "sphinxcontrib_pydantic_model_show_validator_summary"
+        )
         assert hasattr(app.config, "sphinxcontrib_pydantic_model_show_config")
         assert hasattr(app.config, "sphinxcontrib_pydantic_model_signature_prefix")
 
@@ -126,7 +124,9 @@ class TestConfigRegistration:
         )
 
         assert app.config.sphinxcontrib_pydantic_model_show_json is True
-        assert app.config.sphinxcontrib_pydantic_model_signature_prefix == "pydantic model"
+        assert (
+            app.config.sphinxcontrib_pydantic_model_signature_prefix == "pydantic model"
+        )
 
 
 class TestDirectiveRegistration:
@@ -136,9 +136,7 @@ class TestDirectiveRegistration:
         self, make_app: Callable[..., SphinxTestApp]
     ) -> None:
         """Test that pydantic-model directive is registered."""
-        from docutils.parsers.rst import directives
-
-        app = make_app()
+        _ = make_app()
 
         # The directive should be registered after app creation
         assert "pydantic-model" in directives._directives
@@ -147,8 +145,6 @@ class TestDirectiveRegistration:
         self, make_app: Callable[..., SphinxTestApp]
     ) -> None:
         """Test that autopydantic-model directive is registered."""
-        from docutils.parsers.rst import directives
-
-        app = make_app()
+        _ = make_app()
 
         assert "autopydantic-model" in directives._directives

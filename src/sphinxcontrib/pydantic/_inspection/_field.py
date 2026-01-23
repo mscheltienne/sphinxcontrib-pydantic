@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from pydantic_core import PydanticUndefinedType
+from pydantic_core import PydanticUndefined
 
 from pydantic import BaseModel
 from sphinxcontrib.pydantic._inspection._model import is_pydantic_model
@@ -110,7 +110,7 @@ def get_field_info(model: type[BaseModel], field_name: str) -> FieldInfo:
 
     # Get default value
     default = pydantic_field.default
-    has_default = not isinstance(default, PydanticUndefinedType)
+    has_default = default is not PydanticUndefined
 
     # Check for default_factory
     has_default_factory = pydantic_field.default_factory is not None

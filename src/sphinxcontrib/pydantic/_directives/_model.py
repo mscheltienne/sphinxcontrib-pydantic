@@ -20,7 +20,6 @@ from sphinxcontrib.pydantic._inspection import (
     is_pydantic_model,
 )
 from sphinxcontrib.pydantic._rendering import (
-    format_type_annotation,
     generate_field_summary_table,
     generate_validator_summary_table,
 )
@@ -28,8 +27,9 @@ from sphinxcontrib.pydantic._rendering import (
 if TYPE_CHECKING:
     from typing import Any
 
-    from pydantic import BaseModel
     from sphinx.application import Sphinx
+
+    from pydantic import BaseModel
 
 _logger = logging.getLogger(__name__)
 
@@ -116,14 +116,14 @@ class PydanticModelDirective(PydanticDirective):
             parts = objpath.rsplit(".", 1)
             if len(parts) == 1:
                 # No module specified, try current module context
-                _logger.warning(f"No module specified for model: {objpath}")
+                _logger.warning("No module specified for model: %s", objpath)
                 return None
 
             module_path, class_name = parts
             module = __import__(module_path, fromlist=[class_name])
             return getattr(module, class_name, None)
         except (ImportError, AttributeError) as e:
-            _logger.debug(f"Failed to import model {objpath}: {e}")
+            _logger.debug("Failed to import model %s: %s", objpath, e)
             return None
 
     def _generate_model_docs(
@@ -334,7 +334,7 @@ class PydanticModelDirective(PydanticDirective):
             literal["language"] = "json"
             parent += literal
         except Exception as e:
-            _logger.warning(f"Failed to generate JSON schema: {e}")
+            _logger.warning("Failed to generate JSON schema: %s", e)
 
 
 class AutoPydanticModelDirective(PydanticModelDirective):
@@ -349,8 +349,6 @@ class AutoPydanticModelDirective(PydanticModelDirective):
            :members:
            :show-field-summary:
     """
-
-    pass
 
 
 def register_directives(app: Sphinx) -> None:

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Union
 
-import pytest
-
 from sphinxcontrib.pydantic._rendering import (
     escape_rst,
     format_default_value,
@@ -62,12 +60,14 @@ class TestFormatTypeAnnotation:
         """Test formatting of Optional types."""
         from typing import Optional
 
-        result = format_type_annotation(Optional[str])
+        # Need to use typing.Optional to test the function handles legacy syntax
+        result = format_type_annotation(Optional[str])  # noqa: UP045
         assert result == "str | None"
 
     def test_formats_union_type(self) -> None:
         """Test formatting of Union types."""
-        result = format_type_annotation(Union[str, int])
+        # Need to use typing.Union to test the function handles legacy syntax
+        result = format_type_annotation(Union[str, int])  # noqa: UP007
         assert result == "str | int"
 
     def test_formats_list_type(self) -> None:

@@ -66,36 +66,19 @@ def generate_field_summary_table(
 
     # Header row
     lines.append("   * - " + columns[0])
-    for col in columns[1:]:
-        lines.append("     - " + col)
+    lines.extend("     - " + col for col in columns[1:])
 
     # Data rows
     for field in fields:
-        row_data = _get_field_row_data(
-            field,
-            columns,
-            show_alias=show_alias,
-            show_default=show_default,
-            show_required=show_required,
-            show_constraints=show_constraints,
-        )
+        row_data = _get_field_row_data(field, columns)
         lines.append("   * - " + row_data[0])
-        for cell in row_data[1:]:
-            lines.append("     - " + cell)
+        lines.extend("     - " + cell for cell in row_data[1:])
 
     lines.append("")
     return lines
 
 
-def _get_field_row_data(
-    field: FieldInfo,
-    columns: list[str],
-    *,
-    show_alias: bool,
-    show_default: bool,
-    show_required: bool,
-    show_constraints: bool,
-) -> list[str]:
+def _get_field_row_data(field: FieldInfo, columns: list[str]) -> list[str]:
     """Get the data for a single field row.
 
     Parameters
@@ -104,14 +87,6 @@ def _get_field_row_data(
         The field information.
     columns : list[str]
         The columns to include.
-    show_alias : bool
-        Whether to show field aliases.
-    show_default : bool
-        Whether to show default values.
-    show_required : bool
-        Whether to show required indicators.
-    show_constraints : bool
-        Whether to show constraints.
 
     Returns
     -------
@@ -206,26 +181,19 @@ def generate_validator_summary_table(
 
     # Header row
     lines.append("   * - " + columns[0])
-    for col in columns[1:]:
-        lines.append("     - " + col)
+    lines.extend("     - " + col for col in columns[1:])
 
     # Data rows
     for validator in validators:
-        row_data = _get_validator_row_data(validator, columns, list_fields=list_fields)
+        row_data = _get_validator_row_data(validator, columns)
         lines.append("   * - " + row_data[0])
-        for cell in row_data[1:]:
-            lines.append("     - " + cell)
+        lines.extend("     - " + cell for cell in row_data[1:])
 
     lines.append("")
     return lines
 
 
-def _get_validator_row_data(
-    validator: ValidatorInfo,
-    columns: list[str],
-    *,
-    list_fields: bool,
-) -> list[str]:
+def _get_validator_row_data(validator: ValidatorInfo, columns: list[str]) -> list[str]:
     """Get the data for a single validator row.
 
     Parameters
@@ -234,8 +202,6 @@ def _get_validator_row_data(
         The validator information.
     columns : list[str]
         The columns to include.
-    list_fields : bool
-        Whether to list validated fields.
 
     Returns
     -------

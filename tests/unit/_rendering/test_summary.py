@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from sphinxcontrib.pydantic._inspection import get_field_info, get_validator_info
 from sphinxcontrib.pydantic._rendering import (
     generate_field_summary_table,

@@ -71,7 +71,7 @@ class ModelInfo:
     computed_field_names: tuple[str, ...] = field(default_factory=tuple)
     validator_names: tuple[str, ...] = field(default_factory=tuple)
     model_validator_names: tuple[str, ...] = field(default_factory=tuple)
-    model: type[BaseModel] = field(repr=False, default=None)  # type: ignore[assignment]
+    model: type[BaseModel] = field(repr=False, default=None)
 
 
 def get_model_info(model: type[BaseModel]) -> ModelInfo:
@@ -108,18 +108,9 @@ def get_model_info(model: type[BaseModel]) -> ModelInfo:
     computed_field_names = tuple(model.model_computed_fields.keys())
 
     # Extract validator names from pydantic decorators
-    validator_names: list[str] = []
-    model_validator_names: list[str] = []
-
     decorators = model.__pydantic_decorators__
-
-    # Field validators
-    for name_ in decorators.field_validators:
-        validator_names.append(name_)
-
-    # Model validators
-    for name_ in decorators.model_validators:
-        model_validator_names.append(name_)
+    validator_names = list(decorators.field_validators.keys())
+    model_validator_names = list(decorators.model_validators.keys())
 
     return ModelInfo(
         name=name,

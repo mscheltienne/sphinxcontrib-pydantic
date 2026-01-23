@@ -39,6 +39,8 @@ classifiers = [
   'Programming Language :: Python :: 3.14',
 ]
 dependencies = [
+  'docutils',
+  'pydantic-core',
   'pydantic>=2.0',
   'sphinx>=9.0',
 ]

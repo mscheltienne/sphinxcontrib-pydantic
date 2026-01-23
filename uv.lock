@@ -1796,7 +1796,9 @@ wheels = [
 name = "sphinxcontrib-pydantic"
 source = { editable = "." }
 dependencies = [
+    { name = "docutils" },
     { name = "pydantic" },
+    { name = "pydantic-core" },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
@@ -1829,7 +1831,9 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "docutils" },
     { name = "pydantic", specifier = ">=2.0" },
+    { name = "pydantic-core" },
     { name = "pydantic-settings", marker = "extra == 'settings'", specifier = ">=2.0" },
     { name = "sphinx", specifier = ">=9.0" },
 ]

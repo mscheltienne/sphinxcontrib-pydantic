@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from docutils.parsers.rst import directives
 
-from sphinxcontrib.pydantic._directives._base import flag_or_value
+from sphinxcontrib.pydantic._directives._base import PydanticDirective, flag_or_value
 from sphinxcontrib.pydantic._directives._validator import PydanticValidatorDirective
 
 
@@ -13,8 +13,6 @@ class TestPydanticValidatorDirective:
 
     def test_inherits_from_base(self) -> None:
         """Directive inherits from PydanticDirective."""
-        from sphinxcontrib.pydantic._directives._base import PydanticDirective
-
         assert issubclass(PydanticValidatorDirective, PydanticDirective)
 
     def test_has_model_option(self) -> None:

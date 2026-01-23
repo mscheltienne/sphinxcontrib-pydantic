@@ -43,15 +43,15 @@ def make_app(
     tmp_path: Path,
     rootdir: Path,
 ) -> Iterator[Callable[..., SphinxTestApp]]:
-    """Factory to create test Sphinx applications.
+    """Create test Sphinx applications.
 
     This fixture creates SphinxTestApp instances for testing. It handles
     cleanup automatically after each test.
 
-    Usage:
-        def test_something(make_app):
-            app = make_app(confoverrides={"extensions": ["sphinxcontrib.pydantic"]})
-            app.build()
+    Yields
+    ------
+    Callable[..., SphinxTestApp]
+        Factory function to create SphinxTestApp instances.
     """
     apps: list[SphinxTestApp] = []
     saved_path = sys.path.copy()

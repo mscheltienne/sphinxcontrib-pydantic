@@ -6,11 +6,3 @@ from sphinxcontrib.pydantic._directives._model import (
     PydanticModelDirective,
     register_directives,
 )
-
-__all__ = [
-    "AutoPydanticModelDirective",
-    "PydanticDirective",
-    "PydanticModelDirective",
-    "flag_or_value",
-    "register_directives",
-]
