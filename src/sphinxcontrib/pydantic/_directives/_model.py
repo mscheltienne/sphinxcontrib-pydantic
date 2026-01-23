@@ -61,7 +61,7 @@ class PydanticModelDirective(PydanticDirective):
         "show-config": flag_or_value,
         # Member options
         "members": directives.unchanged,
-        "inherited-members": flag_or_value,
+        "inherited-members": directives.unchanged,
         "undoc-members": directives.flag,
     }
 

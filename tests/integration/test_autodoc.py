@@ -78,9 +78,7 @@ class TestAutodocIntegration:
         assert "SimpleModel" in html_content
 
     def test_autodoc_skips_pydantic_internals(
-        self,
-        make_app: Callable[..., SphinxTestApp],
-        tmp_path: Path,
+        self, make_app: Callable[..., SphinxTestApp], tmp_path: Path
     ) -> None:
         """Test that autodoc skips Pydantic internal attributes."""
         srcdir = tmp_path / "src"
