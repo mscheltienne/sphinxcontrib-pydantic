@@ -16,6 +16,7 @@ style = [
   'yamllint',
 ]
 test = [
+  'pydantic-settings>=2.0',
   'pytest-cov',
   'pytest-randomly',
   'pytest-timeout',
@@ -38,9 +39,8 @@ classifiers = [
   'Programming Language :: Python :: 3.14',
 ]
 dependencies = [
-  'click',
-  'packaging',
-  'psutil'
+  'pydantic>=2.0',
+  'sphinx>=9.0',
 ]
 description = 'A simple integration between autodoc and Pydantic in your Sphinx documentation.'
 dynamic = ["version"]
@@ -59,8 +59,8 @@ name = 'sphinxcontrib-pydantic'
 readme = 'README.md'
 requires-python = '>=3.11'
 
-[project.scripts]
-sphinxcontrib-pydantic = 'sphinxcontrib.pydantic._commands.main:run'
+[project.optional-dependencies]
+settings = ['pydantic-settings>=2.0']
 
 [project.urls]
 source = 'https://github.com/mscheltienne/sphinxcontrib-pydantic'
@@ -86,7 +86,6 @@ cover_pylib = false
 omit = [
   '**/__init__.py',
   '**/sphinxcontrib/pydantic/_version.py',
-  '**/sphinxcontrib/pydantic/utils/_fixes.py',
 ]
 
 [tool.pytest.ini_options]
@@ -124,7 +123,6 @@ ban-relative-imports = "all"
 
 [tool.ruff.lint.pydocstyle]
 convention = 'numpy'
-ignore-decorators = ["sphinxcontrib.pydantic.utils._docs.copy_doc"]
 
 [tool.setuptools]
 include-package-data = false

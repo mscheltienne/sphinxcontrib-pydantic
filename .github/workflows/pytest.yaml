@@ -35,7 +35,6 @@ jobs:
           activate-environment: true
           python-version: ${{ matrix.python-version }}
       - run: uv sync -q --no-default-groups --group test
-      - run: sphinxcontrib-pydantic sys-info --developer
       - run: pytest tests --cov=sphinxcontrib.pydantic --cov-report=xml --cov-config=pyproject.toml
       - uses: codecov/codecov-action@v5
         if: ${{ github.repository == 'mscheltienne/sphinxcontrib-pydantic' }}
