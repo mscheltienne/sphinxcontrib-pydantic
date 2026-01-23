@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import psutil
 from packaging.requirements import Requirement
 
-from template.utils._checks import check_type
+from sphinxcontrib.pydantic.utils._checks import check_type
 
 if TYPE_CHECKING:
     from collections.abc import Callable

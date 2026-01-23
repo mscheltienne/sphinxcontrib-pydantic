@@ -4,7 +4,7 @@ from io import StringIO
 
 import pytest
 
-from template.utils.config import _get_gpu_info, sys_info
+from sphinxcontrib.pydantic.utils.config import _get_gpu_info, sys_info
 
 
 def test_sys_info() -> None:
@@ -21,7 +21,6 @@ def test_sys_info() -> None:
     assert "RAM:" in value
     assert "SWAP:" in value
 
-    assert "numpy" in value
     assert "psutil" in value
 
     assert "style" not in value
@@ -42,14 +41,6 @@ def test_gpu_info() -> None:
     version, renderer = _get_gpu_info()
     assert version is not None
     assert renderer is not None
-
-
-def test_sys_info_invalid() -> None:
-    """Test getting information on package without requirements."""
-    out = StringIO()
-    with pytest.raises(RuntimeError, match="could not be retrieved"):
-        sys_info(fid=out, package="numpy")
-    out.close()
 
 
 def test_sys_info_other_package() -> None:

@@ -5,7 +5,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from template.utils.logs import _use_log_level, add_file_handler, logger, verbose, warn
+from sphinxcontrib.pydantic.utils.logs import (
+    _use_log_level,
+    add_file_handler,
+    logger,
+    verbose,
+    warn,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path

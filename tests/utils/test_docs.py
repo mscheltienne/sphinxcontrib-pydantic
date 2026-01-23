@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from template.utils._docs import copy_doc
-from template.utils.logs import verbose
+from sphinxcontrib.pydantic.utils._docs import copy_doc
+from sphinxcontrib.pydantic.utils.logs import verbose
 
 
 def test_copy_doc_function() -> None:

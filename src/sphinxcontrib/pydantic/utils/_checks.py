@@ -8,8 +8,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 if TYPE_CHECKING:
     from typing import Any
 
@@ -68,11 +66,9 @@ class _Callable:
 
 
 _types = {
-    "numeric": (np.floating, float, _IntLike()),
     "path-like": (str, Path, os.PathLike),
     "int-like": (_IntLike(),),
     "callable": (_Callable(),),
-    "array-like": (list, tuple, set, np.ndarray),
 }
 
 

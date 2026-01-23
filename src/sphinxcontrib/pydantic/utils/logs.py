@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from warnings import warn_explicit
 
-from template.utils._checks import ensure_verbose
-from template.utils._fixes import WrapStdOut
+from sphinxcontrib.pydantic.utils._checks import ensure_verbose
+from sphinxcontrib.pydantic.utils._fixes import WrapStdOut
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -266,14 +266,15 @@ logger = _init_logger()
 logger.__doc__ = """Main logger.
 
 This logger is used across the entire package. It's verbosity can be controlled by the
-function :func:`template.set_log_level` or by the ``verbose`` argument of callables
-decorated with the :func:`template.utils.logs.verbose` decorator.
+function :func:`sphinxcontrib.pydantic.set_log_level` or by the ``verbose`` argument of
+callables decorated with the :func:`sphinxcontrib.pydantic.utils.logs.verbose`
+decorator.
 
 Examples
 --------
 .. code-block:: python
 
-    from template.utils.logs import logger, set_log_level
+    from sphinxcontrib.pydantic.utils.logs import logger, set_log_level
 
     set_log_level("DEBUG")
     logger.debug("This debug message will be displayed.")

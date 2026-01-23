@@ -3,27 +3,12 @@ build-backend = 'setuptools.build_meta'
 requires = ['setuptools >= 64.0.0', 'setuptools_scm>=8']
 
 [dependency-groups]
-doc = [
-  'autodoc_pydantic',
-  'furo',
-  'intersphinx_registry',
-  'matplotlib',
-  'memory-profiler',
-  'numpydoc',
-  'sphinx',
-  'sphinx-copybutton',
-  'sphinx-design',
-  'sphinx-gallery',
-  'sphinx-issues',
-  'sphinxcontrib-bibtex',
-]
 ide = [
   'ipykernel',
   'ipympl',
   'ipython',
 ]
 style = [
-  'bibclean',
   'codespell[toml]>=2.2.4',
   'pre-commit',
   'ruff>=0.6.0',
@@ -54,33 +39,32 @@ classifiers = [
 ]
 dependencies = [
   'click',
-  'numpy>=1.23,<3',
   'packaging',
-  'psutil',
+  'psutil'
 ]
-description = 'Template for python projects.'
+description = 'A simple integration between autodoc and Pydantic in your Sphinx documentation.'
 dynamic = ["version"]
 keywords = [
+  'autodoc',
+  'pydantic',
   'python',
-  'template',
+  'sphinx',
 ]
 license = "MIT"
 license-files = ["LICENSE"]
 maintainers = [
   {email = 'mathieu.scheltienne@gmail.com', name = 'Mathieu Scheltienne'},
 ]
-name = 'template'
+name = 'sphinxcontrib-pydantic'
 readme = 'README.md'
 requires-python = '>=3.11'
 
 [project.scripts]
-template = 'template._commands.main:run'
+sphinxcontrib-pydantic = 'sphinxcontrib.pydantic._commands.main:run'
 
 [project.urls]
-documentation = 'https://github.com/mscheltienne/template-python'
-homepage = 'https://github.com/mscheltienne/template-python'
-source = 'https://github.com/mscheltienne/template-python'
-tracker = 'https://github.com/mscheltienne/template-python/issues'
+source = 'https://github.com/mscheltienne/sphinxcontrib-pydantic'
+tracker = 'https://github.com/mscheltienne/sphinxcontrib-pydantic/issues'
 
 [tool.codespell]
 check-filenames = true
@@ -101,8 +85,8 @@ branch = true
 cover_pylib = false
 omit = [
   '**/__init__.py',
-  '**/template/_version.py',
-  '**/template/utils/_fixes.py',
+  '**/sphinxcontrib/pydantic/_version.py',
+  '**/sphinxcontrib/pydantic/utils/_fixes.py',
 ]
 
 [tool.pytest.ini_options]
@@ -140,17 +124,17 @@ ban-relative-imports = "all"
 
 [tool.ruff.lint.pydocstyle]
 convention = 'numpy'
-ignore-decorators = ["template.utils._docs.copy_doc"]
+ignore-decorators = ["sphinxcontrib.pydantic.utils._docs.copy_doc"]
 
 [tool.setuptools]
 include-package-data = false
 
 [tool.setuptools.packages.find]
-include = ['template*']
+namespaces = true
 where = ['src']
 
 [tool.setuptools_scm]
-version_file = "src/template/_version.py"
+version_file = "src/sphinxcontrib/pydantic/_version.py"
 version_scheme = "release-branch-semver"
 
 [tool.tomlsort]

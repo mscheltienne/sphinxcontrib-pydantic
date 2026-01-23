@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from template.utils.logs import logger
+from sphinxcontrib.pydantic.utils.logs import logger
 
 if TYPE_CHECKING:
     import pytest

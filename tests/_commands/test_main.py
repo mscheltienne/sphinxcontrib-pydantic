@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from click.testing import CliRunner
 
-from template._commands.main import run
+from sphinxcontrib.pydantic._commands.main import run
 
 
 def test_main() -> None:

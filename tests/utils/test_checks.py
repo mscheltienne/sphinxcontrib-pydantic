@@ -3,10 +3,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import numpy as np
 import pytest
 
-from template.utils._checks import (
+from sphinxcontrib.pydantic.utils._checks import (
     check_type,
     check_value,
     ensure_int,
@@ -41,17 +40,9 @@ def test_check_type() -> None:
 
     check_type(foo, ("callable",))
 
-    check_type(101, ("numeric",))
-    check_type(101.0, ("numeric",))
-    check_type((1, 0, 1), ("array-like",))
-    check_type([1, 0, 1], ("array-like",))
-    check_type(np.array([1, 0, 1]), ("array-like",))
-
     # invalids
     with pytest.raises(TypeError, match="Item must be an instance of"):
         check_type(101, (float,))
-    with pytest.raises(TypeError, match="Item must be an instance of"):
-        check_type(101, ("array-like",))
     with pytest.raises(TypeError, match="'number' must be an instance of"):
         check_type(101, (float,), "number")
 
