@@ -11,6 +11,36 @@ if TYPE_CHECKING:
     from typing import Any
 
 
+def is_pydantic_settings(obj: Any) -> bool:
+    """Check if an object is a Pydantic settings class.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to check.
+
+    Returns
+    -------
+    bool
+        True if the object is a Pydantic settings class, False otherwise.
+
+    Notes
+    -----
+    This function checks if the object is a class (not an instance) that
+    inherits from ``pydantic_settings.BaseSettings``. Returns False if
+    pydantic-settings is not installed.
+    """
+    try:
+        from pydantic_settings import BaseSettings
+    except ImportError:
+        return False
+
+    try:
+        return isinstance(obj, type) and issubclass(obj, BaseSettings)
+    except TypeError:
+        return False
+
+
 def is_pydantic_model(obj: Any) -> bool:
     """Check if an object is a Pydantic model class.
 

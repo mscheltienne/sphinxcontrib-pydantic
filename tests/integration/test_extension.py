@@ -148,3 +148,49 @@ class TestDirectiveRegistration:
         _ = make_app()
 
         assert "autopydantic-model" in directives._directives
+
+    def test_pydantic_settings_directive_registered(
+        self, make_app: Callable[..., SphinxTestApp]
+    ) -> None:
+        """Test that pydantic-settings directive is registered."""
+        _ = make_app()
+
+        assert "pydantic-settings" in directives._directives
+
+    def test_autopydantic_settings_directive_registered(
+        self, make_app: Callable[..., SphinxTestApp]
+    ) -> None:
+        """Test that autopydantic-settings directive is registered."""
+        _ = make_app()
+
+        assert "autopydantic-settings" in directives._directives
+
+
+class TestAutodocHandlerRegistration:
+    """Tests for autodoc event handler registration."""
+
+    def test_autodoc_skip_member_handler_registered(
+        self, make_app: Callable[..., SphinxTestApp]
+    ) -> None:
+        """Test that autodoc-skip-member handler is registered."""
+        app = make_app()
+
+        # Check that a listener is connected to the event
+        listeners = app.events.listeners.get("autodoc-skip-member", [])
+        assert len(listeners) > 0
+
+        # Verify our handler is among the listeners
+        handler_names = [listener.handler.__name__ for listener in listeners]
+        assert "autodoc_skip_member" in handler_names
+
+    def test_autodoc_process_docstring_handler_registered(
+        self, make_app: Callable[..., SphinxTestApp]
+    ) -> None:
+        """Test that autodoc-process-docstring handler is registered."""
+        app = make_app()
+
+        listeners = app.events.listeners.get("autodoc-process-docstring", [])
+        assert len(listeners) > 0
+
+        handler_names = [listener.handler.__name__ for listener in listeners]
+        assert "autodoc_process_docstring" in handler_names

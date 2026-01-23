@@ -68,7 +68,7 @@ def make_app(
             srcdir.mkdir(exist_ok=True)
             # Copy minimal conf.py and index.rst
             (srcdir / "conf.py").write_text(
-                'extensions = ["sphinxcontrib.pydantic"]\n'
+                'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
                 'project = "Test"\n'
                 'exclude_patterns = ["_build"]\n'
             )

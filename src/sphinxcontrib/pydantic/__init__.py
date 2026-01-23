@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from sphinx.util import logging
 
+from sphinxcontrib.pydantic._autodoc import register_autodoc_handlers
 from sphinxcontrib.pydantic._config import register_config
 from sphinxcontrib.pydantic._directives import register_directives
 from sphinxcontrib.pydantic._version import __version__
@@ -45,8 +46,8 @@ def setup(app: Sphinx) -> dict[str, Any]:
     # Register directives
     register_directives(app)
 
-    # Register event handlers (will be implemented in Phase 4)
-    # _register_events(app)
+    # Register autodoc event handlers
+    register_autodoc_handlers(app)
 
     return {
         "version": __version__,

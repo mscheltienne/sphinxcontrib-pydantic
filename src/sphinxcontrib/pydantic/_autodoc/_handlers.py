@@ -1,0 +1,316 @@
+"""Autodoc event handlers for Pydantic models."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from sphinx.util import logging
+
+from sphinxcontrib.pydantic._inspection import (
+    get_field_info,
+    get_model_info,
+    get_validator_info,
+    is_pydantic_model,
+)
+from sphinxcontrib.pydantic._rendering import (
+    generate_field_summary_table,
+    generate_validator_summary_table,
+)
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    from sphinx.application import Sphinx
+
+_logger = logging.getLogger(__name__)
+
+# Pydantic internal attributes that should be skipped in documentation
+PYDANTIC_SKIP_MEMBERS: frozenset[str] = frozenset(
+    {
+        # Model class attributes
+        "model_fields",
+        "model_computed_fields",
+        "model_config",
+        "model_extra",
+        "model_fields_set",
+        # Private pydantic attributes
+        "__pydantic_complete__",
+        "__pydantic_core_schema__",
+        "__pydantic_custom_init__",
+        "__pydantic_decorators__",
+        "__pydantic_extra__",
+        "__pydantic_fields_set__",
+        "__pydantic_generic_metadata__",
+        "__pydantic_parent_namespace__",
+        "__pydantic_post_init__",
+        "__pydantic_private__",
+        "__pydantic_root_model__",
+        "__pydantic_serializer__",
+        "__pydantic_validator__",
+        # Class variables from pydantic
+        "__class_vars__",
+        "__private_attributes__",
+        "__signature__",
+        "__pydantic_fields__",
+    }
+)
+
+
+def is_pydantic_internal(name: str) -> bool:
+    """Check if a member name is a Pydantic internal attribute.
+
+    Parameters
+    ----------
+    name : str
+        The member name to check.
+
+    Returns
+    -------
+    bool
+        True if the name is a Pydantic internal attribute.
+    """
+    if name in PYDANTIC_SKIP_MEMBERS:
+        return True
+    # Also skip any __pydantic_* attributes not in the explicit list
+    if name.startswith("__pydantic_"):
+        return True
+    return False
+
+
+def should_skip_member(
+    what: str,
+    name: str,
+    obj: Any,
+    skip: bool,
+    options: dict[str, Any],
+) -> bool | None:
+    """Determine if a member should be skipped in documentation.
+
+    This is a helper function used by the autodoc-skip-member event handler.
+
+    Parameters
+    ----------
+    what : str
+        The type of the object (e.g., 'module', 'class', 'attribute').
+    name : str
+        The name of the member.
+    obj : Any
+        The member object.
+    skip : bool
+        Whether autodoc already decided to skip this member.
+    options : dict[str, Any]
+        The options given to the directive.
+
+    Returns
+    -------
+    bool | None
+        True to skip, False to include, None to use default behavior.
+    """
+    # Don't override if already decided to skip
+    if skip:
+        return None
+
+    # Only handle attributes (not methods, classes, etc.)
+    if what != "attribute":
+        return None
+
+    # Skip Pydantic internal attributes
+    if is_pydantic_internal(name):
+        return True
+
+    return None
+
+
+def autodoc_skip_member(
+    app: Sphinx,
+    what: str,
+    name: str,
+    obj: Any,
+    skip: bool,
+    options: dict[str, Any],
+) -> bool | None:
+    """Handle autodoc-skip-member event.
+
+    This event handler skips Pydantic internal attributes from documentation.
+
+    Parameters
+    ----------
+    app : Sphinx
+        The Sphinx application.
+    what : str
+        The type of the object.
+    name : str
+        The name of the member.
+    obj : Any
+        The member object.
+    skip : bool
+        Whether to skip this member.
+    options : dict[str, Any]
+        The options given to the directive.
+
+    Returns
+    -------
+    bool | None
+        True to skip, False to include, None to use default behavior.
+    """
+    return should_skip_member(what, name, obj, skip, options)
+
+
+def autodoc_process_docstring(
+    app: Sphinx,
+    what: str,
+    name: str,
+    obj: Any,
+    options: dict[str, Any],
+    lines: list[str],
+) -> None:
+    """Handle autodoc-process-docstring event.
+
+    This event handler adds Pydantic-specific documentation (field summaries,
+    validator summaries) to class docstrings for Pydantic models.
+
+    Parameters
+    ----------
+    app : Sphinx
+        The Sphinx application.
+    what : str
+        The type of the object.
+    name : str
+        The fully qualified name of the object.
+    obj : Any
+        The object itself.
+    options : dict[str, Any]
+        The options given to the directive.
+    lines : list[str]
+        The lines of the docstring (modified in place).
+    """
+    # Only process classes
+    if what != "class":
+        return
+
+    # Only process Pydantic models
+    if not is_pydantic_model(obj):
+        return
+
+    _logger.debug("Processing Pydantic model: %s", name)
+
+    # Get model info
+    try:
+        model_info = get_model_info(obj)
+    except Exception as e:
+        _logger.warning("Failed to get model info for %s: %s", name, e)
+        return
+
+    # Add field summary if configured
+    show_field_summary = getattr(
+        app.config, "sphinxcontrib_pydantic_model_show_field_summary", True
+    )
+    if show_field_summary and model_info.field_names:
+        _add_field_summary(obj, model_info, app, lines)
+
+    # Add validator summary if configured
+    show_validator_summary = getattr(
+        app.config, "sphinxcontrib_pydantic_model_show_validator_summary", True
+    )
+    validators = list(model_info.validator_names) + list(
+        model_info.model_validator_names
+    )
+    if show_validator_summary and validators:
+        _add_validator_summary(obj, model_info, validators, app, lines)
+
+
+def _add_field_summary(
+    model: type,
+    model_info: Any,
+    app: Sphinx,
+    lines: list[str],
+) -> None:
+    """Add field summary table to docstring lines.
+
+    Parameters
+    ----------
+    model : type
+        The Pydantic model class.
+    model_info : ModelInfo
+        Information about the model.
+    app : Sphinx
+        The Sphinx application.
+    lines : list[str]
+        The docstring lines to modify.
+    """
+    show_alias = getattr(app.config, "sphinxcontrib_pydantic_field_show_alias", True)
+    show_default = getattr(
+        app.config, "sphinxcontrib_pydantic_field_show_default", True
+    )
+    show_required = getattr(
+        app.config, "sphinxcontrib_pydantic_field_show_required", True
+    )
+    show_constraints = getattr(
+        app.config, "sphinxcontrib_pydantic_field_show_constraints", True
+    )
+
+    try:
+        fields = [get_field_info(model, name) for name in model_info.field_names]
+        summary_lines = generate_field_summary_table(
+            fields,
+            show_alias=show_alias,
+            show_default=show_default,
+            show_required=show_required,
+            show_constraints=show_constraints,
+        )
+        if summary_lines:
+            lines.append("")
+            lines.extend(summary_lines)
+    except Exception as e:
+        _logger.warning("Failed to generate field summary: %s", e)
+
+
+def _add_validator_summary(
+    model: type,
+    model_info: Any,
+    validator_names: list[str],
+    app: Sphinx,
+    lines: list[str],
+) -> None:
+    """Add validator summary table to docstring lines.
+
+    Parameters
+    ----------
+    model : type
+        The Pydantic model class.
+    model_info : ModelInfo
+        Information about the model.
+    validator_names : list[str]
+        Names of validators to include.
+    app : Sphinx
+        The Sphinx application.
+    lines : list[str]
+        The docstring lines to modify.
+    """
+    list_fields = getattr(
+        app.config, "sphinxcontrib_pydantic_validator_list_fields", True
+    )
+
+    try:
+        validators = [get_validator_info(model, name) for name in validator_names]
+        summary_lines = generate_validator_summary_table(
+            validators,
+            list_fields=list_fields,
+        )
+        if summary_lines:
+            lines.append("")
+            lines.extend(summary_lines)
+    except Exception as e:
+        _logger.warning("Failed to generate validator summary: %s", e)
+
+
+def register_autodoc_handlers(app: Sphinx) -> None:
+    """Register autodoc event handlers with Sphinx.
+
+    Parameters
+    ----------
+    app : Sphinx
+        The Sphinx application instance.
+    """
+    app.connect("autodoc-skip-member", autodoc_skip_member)
+    app.connect("autodoc-process-docstring", autodoc_process_docstring)

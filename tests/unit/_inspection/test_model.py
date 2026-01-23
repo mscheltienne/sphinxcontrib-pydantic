@@ -9,6 +9,7 @@ from sphinxcontrib.pydantic._inspection import (
     ModelInfo,
     get_model_info,
     is_pydantic_model,
+    is_pydantic_settings,
 )
 
 
@@ -177,3 +178,49 @@ class TestModelInfo:
         info = get_model_info(ModelValidatorAfter)
 
         assert "passwords_match" in info.model_validator_names
+
+
+class TestIsPydanticSettings:
+    """Tests for is_pydantic_settings function."""
+
+    def test_returns_true_for_settings_class(self) -> None:
+        """Test that BaseSettings classes are detected."""
+        from tests.assets.models.settings import SimpleSettings
+
+        assert is_pydantic_settings(SimpleSettings) is True
+
+    def test_returns_false_for_regular_model(self) -> None:
+        """Test that regular BaseModel classes are not detected as settings."""
+        from tests.assets.models.basic import SimpleModel
+
+        assert is_pydantic_settings(SimpleModel) is False
+
+    def test_returns_false_for_model_instance(self) -> None:
+        """Test that settings instances are not detected as settings classes."""
+        from tests.assets.models.settings import SimpleSettings
+
+        instance = SimpleSettings()
+        assert is_pydantic_settings(instance) is False
+
+    def test_returns_false_for_regular_class(self) -> None:
+        """Test that regular classes are not detected."""
+
+        class RegularClass:
+            pass
+
+        assert is_pydantic_settings(RegularClass) is False
+
+    def test_returns_false_for_non_class(self) -> None:
+        """Test that non-class objects are not detected."""
+        assert is_pydantic_settings("string") is False
+        assert is_pydantic_settings(123) is False
+        assert is_pydantic_settings(None) is False
+
+    def test_returns_true_for_inherited_settings(self) -> None:
+        """Test that inherited settings classes are detected."""
+        from pydantic_settings import BaseSettings
+
+        class ChildSettings(BaseSettings):
+            pass
+
+        assert is_pydantic_settings(ChildSettings) is True
