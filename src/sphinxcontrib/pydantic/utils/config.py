@@ -47,7 +47,7 @@ def sys_info(
 
     ljust = 26
     out = partial(print, end="", file=fid)
-    package = __package__.split(".")[0] if package is None else package
+    package = "sphinxcontrib-pydantic" if package is None else package
 
     # OS information - requires python 3.8 or above
     out("Platform:".ljust(ljust) + platform.platform() + "\n")
