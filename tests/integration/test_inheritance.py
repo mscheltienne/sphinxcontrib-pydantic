@@ -121,7 +121,7 @@ class TestInheritanceDocumentation:
             "Test Project\n"
             "============\n"
             "\n"
-            ".. autoclass:: tests.assets.models.inheritance.ChildModelWithOwnValidator\n"
+            ".. autoclass:: tests.assets.models.inheritance.ChildModelWithOwnValidator\n"  # noqa: E501
             "   :members:\n"
         )
 
@@ -138,7 +138,9 @@ class TestInheritanceDocumentation:
             "dl.py.method dt.sig#tests\\.assets\\.models\\.inheritance\\."
             "ChildModelWithOwnValidator\\.validate_child_field"
         )
-        assert validator_sig is not None, "Validator validate_child_field not documented"
+        assert validator_sig is not None, (
+            "Validator validate_child_field not documented"
+        )
 
 
 class TestMultiLevelInheritance:
@@ -210,7 +212,7 @@ class TestInheritedModelValidators:
             "Test Project\n"
             "============\n"
             "\n"
-            ".. autoclass:: tests.assets.models.inheritance.ChildWithInheritedModelValidator\n"
+            ".. autoclass:: tests.assets.models.inheritance.ChildWithInheritedModelValidator\n"  # noqa: E501
             "   :members:\n"
         )
 

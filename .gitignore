@@ -73,6 +73,10 @@ doc/_build/
 doc/generated/
 doc/api/generated/
 
+# Example package documentation builds
+examples/**/doc/_build/
+examples/**/doc/generated/
+
 # PyBuilder
 target/
 

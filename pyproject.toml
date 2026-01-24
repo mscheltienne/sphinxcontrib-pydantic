@@ -3,6 +3,13 @@ build-backend = 'setuptools.build_meta'
 requires = ['setuptools >= 64.0.0', 'setuptools_scm>=8']
 
 [dependency-groups]
+example = [
+  'furo',
+  'intersphinx-registry',
+  'numpydoc',
+  'pydantic-settings>=2.0',
+  'sqlmodel',
+]
 ide = [
   'ipykernel',
   'ipympl',

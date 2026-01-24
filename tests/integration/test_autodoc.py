@@ -45,9 +45,7 @@ class TestAutodocIntegration:
 
         # Verify models are documented as proper class definitions
         class_sigs = soup.select("dl.py.class dt.sig")
-        documented_classes = {
-            sig.get("id", "").split(".")[-1] for sig in class_sigs
-        }
+        documented_classes = {sig.get("id", "").split(".")[-1] for sig in class_sigs}
         assert "SimpleModel" in documented_classes
         assert "EmptyModel" in documented_classes
 
@@ -386,5 +384,7 @@ class TestConfigurationEffects:
         prefix_span = class_sig.select_one("span.property")
         assert prefix_span is not None, "Signature prefix span not found"
         prefix_text = prefix_span.get_text(strip=True)
-        assert "pydantic" in prefix_text, f"Expected 'pydantic' in prefix, got: {prefix_text}"
+        assert "pydantic" in prefix_text, (
+            f"Expected 'pydantic' in prefix, got: {prefix_text}"
+        )
         assert "model" in prefix_text, f"Expected 'model' in prefix, got: {prefix_text}"

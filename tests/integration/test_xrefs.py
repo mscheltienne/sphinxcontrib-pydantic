@@ -59,9 +59,9 @@ class TestCrossReferenceResolution:
         validator_hrefs = [link.get("href", "") for link in validator_links]
 
         # Should have a link to check_positive
-        assert any(
-            "check_positive" in href for href in validator_hrefs
-        ), f"Expected link to check_positive, found: {validator_hrefs}"
+        assert any("check_positive" in href for href in validator_hrefs), (
+            f"Expected link to check_positive, found: {validator_hrefs}"
+        )
 
         # Verify the link text is correct
         validator_texts = [link.get_text(strip=True) for link in validator_links]
@@ -189,7 +189,9 @@ class TestCrossReferenceResolution:
             "dl.py.method dt.sig#tests\\.assets\\.models\\.validators\\."
             "ModelValidatorAfter\\.passwords_match"
         )
-        assert validator_sig is not None, "Model validator passwords_match not documented"
+        assert validator_sig is not None, (
+            "Model validator passwords_match not documented"
+        )
 
         # Verify the method name
         method_name = validator_sig.select_one("span.sig-name.descname")
@@ -243,7 +245,9 @@ class TestValidatorTableStructure:
         assert validators_table is not None, "Validators table not found"
 
         # Verify table headers
-        headers = [th.get_text(strip=True) for th in validators_table.select("thead th")]
+        headers = [
+            th.get_text(strip=True) for th in validators_table.select("thead th")
+        ]
         assert "Validator" in headers, f"Expected 'Validator' header, got: {headers}"
         assert "Mode" in headers, f"Expected 'Mode' header, got: {headers}"
         assert "Fields" in headers, f"Expected 'Fields' header, got: {headers}"

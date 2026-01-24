@@ -114,11 +114,8 @@ def should_skip_member(
     if skip:
         return None
 
-    # Only handle attributes (not methods, classes, etc.)
-    if what != "attribute":
-        return None
-
-    # Skip Pydantic internal attributes
+    # Skip Pydantic internal attributes regardless of their documented type
+    # (they can appear as 'attribute', 'class', or other types)
     if is_pydantic_internal(name):
         return True
 
