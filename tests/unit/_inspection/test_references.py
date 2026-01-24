@@ -184,11 +184,12 @@ class TestInheritanceScenarios:
         validator_names = {m.validator_name for m in mappings}
         assert "validate_base_field" in validator_names
 
-        # Verify the ref points to the child class for documentation purposes
+        # Verify the ref points to the defining class (where validator is documented)
         inherited_mapping = next(
             m for m in mappings if m.validator_name == "validate_base_field"
         )
-        assert "ChildModelSimple" in inherited_mapping.validator_ref
+        assert "BaseModelWithValidator" in inherited_mapping.validator_ref
+        assert "BaseModelWithValidator" in inherited_mapping.field_ref
 
     def test_child_with_own_and_inherited_validators(self) -> None:
         """Test child model with both own and inherited validators."""

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import inspect
-from typing import TYPE_CHECKING, Annotated, get_args, get_origin
+from typing import TYPE_CHECKING
 
 from sphinx.util import logging
-from sphinx.util.inspect import stringify_signature
 
 from sphinxcontrib.pydantic._inspection import (
     filter_mappings_by_field,
@@ -15,6 +13,7 @@ from sphinxcontrib.pydantic._inspection import (
     get_validator_field_mappings,
     get_validator_info,
     is_pydantic_model,
+    is_pydantic_settings,
 )
 from sphinxcontrib.pydantic._rendering import (
     create_role_reference,
@@ -381,72 +380,6 @@ def _add_validator_summary(
         _logger.warning("Failed to generate validator summary: %s", e)
 
 
-def _simplify_annotation(annotation: Any) -> Any:
-    """Simplify an annotation by stripping Annotated wrappers.
-
-    For Annotated[T, ...] types, returns just T. This removes constraint
-    metadata like annotated_types.Ge, annotated_types.MinLen, etc.
-
-    Parameters
-    ----------
-    annotation : Any
-        The type annotation to simplify.
-
-    Returns
-    -------
-    Any
-        The simplified annotation (base type without Annotated wrapper).
-    """
-    if get_origin(annotation) is Annotated:
-        # Get the base type (first argument of Annotated)
-        args = get_args(annotation)
-        if args:
-            return args[0]
-    return annotation
-
-
-def _build_simplified_signature(model: type) -> inspect.Signature | None:
-    """Build a simplified Signature object for a Pydantic model.
-
-    This reconstructs the signature using simplified types (without Annotated
-    wrappers) to avoid unresolvable cross-references to annotated_types.
-
-    Parameters
-    ----------
-    model : type
-        The Pydantic model class.
-
-    Returns
-    -------
-    inspect.Signature | None
-        The simplified Signature object, or None if signature cannot be obtained.
-    """
-    try:
-        sig = inspect.signature(model)
-    except (ValueError, TypeError):
-        return None
-
-    new_params = []
-    for name, param in sig.parameters.items():
-        # Get simplified annotation
-        if param.annotation is not inspect.Parameter.empty:
-            # For model fields, use the simplified annotation from model_fields
-            if hasattr(model, "model_fields") and name in model.model_fields:
-                simplified = model.model_fields[name].annotation
-            else:
-                # For non-field parameters, simplify directly
-                simplified = _simplify_annotation(param.annotation)
-        else:
-            simplified = inspect.Parameter.empty
-
-        # Create new parameter with simplified annotation
-        new_params.append(
-            param.replace(annotation=simplified)
-        )
-
-    return sig.replace(parameters=new_params)
-
-
 def autodoc_process_signature(
     app: Sphinx,
     what: str,
@@ -458,9 +391,9 @@ def autodoc_process_signature(
 ) -> tuple[str | None, str | None] | None:
     """Handle autodoc-process-signature event.
 
-    This event handler simplifies signatures for Pydantic models by removing
-    Annotated wrappers that contain annotated_types constraints. This prevents
-    unresolvable cross-references to annotated_types.Ge, annotated_types.MinLen, etc.
+    Hides parameter list for Pydantic models/settings when configured.
+    This prevents cross-reference warnings for types without intersphinx
+    inventories (annotated_types, pydantic_settings internals, etc.).
 
     Parameters
     ----------
@@ -487,18 +420,20 @@ def autodoc_process_signature(
     if what != "class" or not is_pydantic_model(obj):
         return None
 
-    # Build simplified signature
-    simplified_sig = _build_simplified_signature(obj)
-    if simplified_sig is not None:
-        # Use Sphinx's stringify_signature for consistent formatting
-        sig_str = stringify_signature(
-            simplified_sig,
-            show_return_annotation=False,
-            unqualified_typehints=True,
+    # Check if we should hide the parameter list
+    if is_pydantic_settings(obj):
+        hide = getattr(
+            app.config, "sphinxcontrib_pydantic_settings_hide_paramlist", True
         )
-        return (sig_str, return_annotation)
+    else:
+        hide = getattr(
+            app.config, "sphinxcontrib_pydantic_model_hide_paramlist", True
+        )
 
-    return None
+    if hide:
+        return ("", return_annotation)  # Empty signature
+
+    return None  # Use default signature
 
 
 def register_autodoc_handlers(app: Sphinx) -> None:

@@ -262,7 +262,7 @@ def _get_validator_row_data(
     columns : list[str]
         The columns to include.
     model_path : str | None
-        The fully qualified model path for cross-references.
+        The fully qualified model path for cross-references (used as fallback).
 
     Returns
     -------
@@ -274,7 +274,8 @@ def _get_validator_row_data(
     for col in columns:
         if col == "Validator":
             if model_path:
-                ref = f"{model_path}.{validator.name}"
+                # Use the defining class path for the validator cross-reference
+                ref = f"{validator.defining_class_path}.{validator.name}"
                 row.append(create_role_reference(validator.name, ref))
             else:
                 row.append(f"``{validator.name}``")
@@ -285,10 +286,17 @@ def _get_validator_row_data(
                 row.append("*model*")
             elif validator.fields:
                 if model_path:
-                    field_refs = [
-                        create_role_reference(f, f"{model_path}.{f}")
-                        for f in validator.fields
-                    ]
+                    # Use the defining class path for each field cross-reference
+                    field_refs = []
+                    for f in validator.fields:
+                        if f == "*":
+                            field_refs.append("``*``")
+                        else:
+                            # Get the class where this field was defined
+                            field_path = validator.field_class_paths.get(f, model_path)
+                            field_refs.append(
+                                create_role_reference(f, f"{field_path}.{f}")
+                            )
                     row.append(", ".join(field_refs))
                 else:
                     fields_str = ", ".join(f"``{f}``" for f in validator.fields)

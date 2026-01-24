@@ -99,3 +99,23 @@ intersphinx_mapping.update(
         "pydantic": ("https://docs.pydantic.dev/latest/", None),
     }
 )
+
+# Nitpick ignore for types without intersphinx inventories
+nitpick_ignore = [
+    # SQLModel has no intersphinx inventory
+    ("py:class", "sqlmodel.main.SQLModel"),
+    # TypeVars in generics module
+    ("py:obj", "example_advanced.generics.T"),
+    ("py:obj", "example_advanced.generics.K"),
+    ("py:obj", "example_advanced.generics.V"),
+    ("py:class", "example_advanced.generics.T"),
+    ("py:class", "example_advanced.generics.K"),
+    ("py:class", "example_advanced.generics.V"),
+    # Unqualified TypeVars in method signatures/docstrings
+    ("py:obj", "T"),
+    ("py:obj", "K"),
+    ("py:obj", "V"),
+    ("py:class", "T"),
+    ("py:class", "K"),
+    ("py:class", "V"),
+]

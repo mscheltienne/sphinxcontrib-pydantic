@@ -336,10 +336,9 @@ class TestBuildWarnings:
     ) -> None:
         """Test that no nitpick warnings are generated for constrained fields.
 
-        Pydantic models with constrained fields (ge, le, min_length, etc.) use
-        annotated_types internally. Without signature simplification, Sphinx
-        would generate warnings about unresolvable references to annotated_types.Ge,
-        annotated_types.MinLen, etc.
+        With hide_paramlist=True (default), the signature is hidden, so there are
+        no cross-reference warnings for annotated_types.Ge, annotated_types.MinLen,
+        etc.
 
         This test uses autoclass (not pydantic-model) because autoclass generates
         the full signature with Annotated types, which is where the warnings come from.
@@ -372,6 +371,135 @@ class TestBuildWarnings:
         )
         assert "_PydanticGeneralMetadata" not in warnings, (
             f"Unexpected _PydanticGeneralMetadata warnings:\n{warnings}"
+        )
+
+    def test_model_hide_paramlist_true_hides_signature(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that model signature is hidden when hide_paramlist=True (default)."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+            # Default: sphinxcontrib_pydantic_model_hide_paramlist = True
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.basic.SimpleModel\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # Find SimpleModel's signature
+        for sig in soup.select("dt.sig"):
+            name_span = sig.select_one("span.sig-name.descname")
+            if name_span and name_span.get_text(strip=True) == "SimpleModel":
+                # Should have no parameter list (just empty parens or nothing)
+                sig_text = sig.get_text()
+                # The signature should NOT contain parameter names like "name" or "count"
+                assert "name:" not in sig_text or "sig-param" not in str(sig), (
+                    f"Signature should be hidden but found: {sig_text}"
+                )
+                break
+        else:
+            raise AssertionError("SimpleModel not found in output")
+
+    def test_model_hide_paramlist_false_shows_signature(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that model signature is shown when hide_paramlist=False."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+            "sphinxcontrib_pydantic_model_hide_paramlist = False\n"
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.basic.SimpleModel\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # Find SimpleModel's signature
+        for sig in soup.select("dt.sig"):
+            name_span = sig.select_one("span.sig-name.descname")
+            if name_span and name_span.get_text(strip=True) == "SimpleModel":
+                # Should have parameter list with field names
+                sig_params = sig.select("em.sig-param")
+                assert len(sig_params) > 0, (
+                    f"Expected parameters in signature but found: {sig.get_text()}"
+                )
+                break
+        else:
+            raise AssertionError("SimpleModel not found in output")
+
+    def test_settings_hide_paramlist_true_no_warnings(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+    ) -> None:
+        """Test that settings signature is hidden by default, avoiding warnings.
+
+        BaseSettings has many internal parameters with types that can't be
+        resolved (DotenvType, CliSettingsSource, etc.). With hide_paramlist=True,
+        these don't generate warnings.
+        """
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+            "nitpicky = True\n"
+            # Default: sphinxcontrib_pydantic_settings_hide_paramlist = True
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.settings.SimpleSettings\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        warnings = app._warning.getvalue()
+
+        # Should have no warnings about pydantic_settings internal types
+        assert "DotenvType" not in warnings, (
+            f"Unexpected DotenvType warnings:\n{warnings}"
+        )
+        assert "CliSettingsSource" not in warnings, (
+            f"Unexpected CliSettingsSource warnings:\n{warnings}"
+        )
+        assert "_case_sensitive" not in warnings, (
+            f"Unexpected BaseSettings parameter warnings:\n{warnings}"
         )
 
 
