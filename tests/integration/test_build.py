@@ -408,7 +408,7 @@ class TestBuildWarnings:
             if name_span and name_span.get_text(strip=True) == "SimpleModel":
                 # Should have no parameter list (just empty parens or nothing)
                 sig_text = sig.get_text()
-                # The signature should NOT contain parameter names like "name" or "count"
+                # The signature should NOT contain parameter names like "name", "count"
                 assert "name:" not in sig_text or "sig-param" not in str(sig), (
                     f"Signature should be hidden but found: {sig_text}"
                 )

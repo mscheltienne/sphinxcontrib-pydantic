@@ -3,14 +3,14 @@ build-backend = 'setuptools.build_meta'
 requires = ['setuptools >= 64.0.0']
 
 [project]
-name = 'example-advanced'
-version = '0.1.0'
-requires-python = '>=3.11'
 dependencies = [
-  'pydantic>=2.0',
   'pydantic-settings>=2.0',
+  'pydantic>=2.0',
   'sqlmodel>=0.0.16',
 ]
+name = 'example-advanced'
+requires-python = '>=3.11'
+version = '0.1.0'
 
 [tool.setuptools.packages.find]
 where = ['src']

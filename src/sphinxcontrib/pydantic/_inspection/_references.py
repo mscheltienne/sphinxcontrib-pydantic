@@ -112,9 +112,7 @@ def get_validator_field_mappings(model: type[BaseModel]) -> list[ValidatorFieldM
     # Field validators
     for validator_name, validator_decorator in decorators.field_validators.items():
         # Get the class where the validator was defined
-        validator_class_path = get_defining_class_path(
-            validator_decorator.func, model
-        )
+        validator_class_path = get_defining_class_path(validator_decorator.func, model)
 
         for field in validator_decorator.info.fields:
             field_name = ASTERISK_FIELD_NAME if field == "*" else field
@@ -136,9 +134,7 @@ def get_validator_field_mappings(model: type[BaseModel]) -> list[ValidatorFieldM
 
     # Model validators (validate "all fields")
     for validator_name, validator_decorator in decorators.model_validators.items():
-        validator_class_path = get_defining_class_path(
-            validator_decorator.func, model
-        )
+        validator_class_path = get_defining_class_path(validator_decorator.func, model)
         mappings.append(
             ValidatorFieldMap(
                 field_name=ASTERISK_FIELD_NAME,

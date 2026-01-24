@@ -426,9 +426,7 @@ def autodoc_process_signature(
             app.config, "sphinxcontrib_pydantic_settings_hide_paramlist", True
         )
     else:
-        hide = getattr(
-            app.config, "sphinxcontrib_pydantic_model_hide_paramlist", True
-        )
+        hide = getattr(app.config, "sphinxcontrib_pydantic_model_hide_paramlist", True)
 
     if hide:
         return ("", return_annotation)  # Empty signature
