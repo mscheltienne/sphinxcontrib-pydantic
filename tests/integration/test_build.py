@@ -329,6 +329,51 @@ class TestBuildWarnings:
         # Warning should mention the missing model
         assert "FakeModel" in warnings or "nonexistent" in warnings
 
+    def test_no_nitpick_warnings_for_constrained_fields(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+    ) -> None:
+        """Test that no nitpick warnings are generated for constrained fields.
+
+        Pydantic models with constrained fields (ge, le, min_length, etc.) use
+        annotated_types internally. Without signature simplification, Sphinx
+        would generate warnings about unresolvable references to annotated_types.Ge,
+        annotated_types.MinLen, etc.
+
+        This test uses autoclass (not pydantic-model) because autoclass generates
+        the full signature with Annotated types, which is where the warnings come from.
+        """
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+            "nitpicky = True\n"
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.fields.FieldWithConstraints\n"
+            "   :members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        warnings = app._warning.getvalue()
+
+        # Should have no warnings about annotated_types or pydantic internals
+        assert "annotated_types" not in warnings, (
+            f"Unexpected annotated_types warnings:\n{warnings}"
+        )
+        assert "_PydanticGeneralMetadata" not in warnings, (
+            f"Unexpected _PydanticGeneralMetadata warnings:\n{warnings}"
+        )
+
 
 class TestMultipleModels:
     """Tests for documenting multiple models."""
