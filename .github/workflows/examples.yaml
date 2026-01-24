@@ -35,7 +35,7 @@ jobs:
           activate-environment: true
           python-version: ${{ matrix.python-version }}
       - run: |
-          uv sync -q --no-default-groups --group test
+          uv sync -q --no-default-groups --group example
           uv pip install -e examples/basic/
           uv pip install -e examples/advanced/
           uv pip install -e examples/autosummary/

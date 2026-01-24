@@ -5,3 +5,140 @@
 [![tests](https://github.com/mscheltienne/sphinxcontrib-pydantic/actions/workflows/pytest.yaml/badge.svg?branch=main)](https://github.com/mscheltienne/sphinxcontrib-pydantic/actions/workflows/pytest.yaml)
 
 # sphinxcontrib-pydantic
+
+A Sphinx extension for documenting Pydantic models in your documentation.
+
+This project was inspired by [autodoc_pydantic](https://github.com/mansenfranzen/autodoc_pydantic),
+which has gone unmaintained. Unlike its predecessor, `sphinxcontrib-pydantic` focuses
+exclusively on modern versions: **Pydantic v2+** and **Sphinx 9.0+** (Python 3.11+).
+
+This project was vibe-coded using Claude Code (Opus 4.5); using `autodoc_pydantic` as
+inspiration as well as the source code of `sphinx` and `pydantic` as documentation.
+
+## Installation
+
+```bash
+pip install sphinxcontrib-pydantic
+```
+
+For `pydantic-settings` support:
+
+```bash
+pip install sphinxcontrib-pydantic[settings]
+```
+
+## Configuration
+
+Enable the extension in your `conf.py`:
+
+```python
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinxcontrib.pydantic",
+]
+```
+
+## Usage
+
+### With autodoc
+
+The extension integrates with `sphinx.ext.autodoc`. Simply use `automodule` or
+`autoclass`:
+
+```rst
+.. automodule:: mypackage.models
+   :members:
+```
+
+Pydantic models are automatically detected and documented with field summaries and
+validators.
+
+### With autosummary
+
+For larger projects, use `autosummary` with a custom template:
+
+```rst
+.. currentmodule:: mypackage.models
+
+.. autosummary::
+   :toctree: generated/api
+   :template: autosummary/models.rst
+
+   UserConfig
+   DatabaseConfig
+```
+
+Create `_templates/autosummary/models.rst`:
+
+```jinja
+{{ fullname | escape | underline }}
+
+.. currentmodule:: {{ module }}
+
+.. pydantic-model:: {{ fullname }}
+   :inherited-members: BaseModel
+```
+
+### Standalone directives
+
+Document models directly with the `pydantic-model` directive:
+
+```rst
+.. pydantic-model:: mypackage.models.UserConfig
+   :show-field-summary:
+   :show-validator-summary:
+```
+
+For Pydantic settings:
+
+```rst
+.. pydantic-settings:: mypackage.settings.AppSettings
+   :show-field-summary:
+```
+
+## Configuration Options
+
+All options use the `sphinxcontrib_pydantic_` prefix in `conf.py`, e.g.
+`sphinxcontrib_pydantic_model_show_json`.
+
+### Model Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `model_show_json` | `False` | Show JSON schema for the model |
+| `model_show_field_summary` | `True` | Show summary table of fields |
+| `model_show_validator_summary` | `True` | Show summary table of validators |
+| `model_show_config` | `False` | Show model configuration |
+| `model_signature_prefix` | `"model"` | Prefix shown before model name |
+| `model_hide_paramlist` | `True` | Hide `__init__` parameter list |
+
+### Field Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `field_show_alias` | `True` | Show field aliases |
+| `field_show_default` | `True` | Show default values |
+| `field_show_required` | `True` | Show required status |
+| `field_show_constraints` | `True` | Show field constraints (e.g., `min_length`) |
+
+### Validator Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `validator_list_fields` | `True` | List fields affected by each validator |
+
+### Settings Options
+
+Settings options mirror model options with `settings_` prefix (e.g.,
+`sphinxcontrib_pydantic_settings_show_json`).
+They default to the same values as their model counterparts.
+
+### Example Configuration
+
+```python
+# conf.py
+sphinxcontrib_pydantic_model_show_json = True
+sphinxcontrib_pydantic_model_show_field_summary = True
+sphinxcontrib_pydantic_field_show_constraints = True
+sphinxcontrib_pydantic_settings_signature_prefix = "config"
+```
