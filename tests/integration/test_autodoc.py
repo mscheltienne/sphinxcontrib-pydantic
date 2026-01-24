@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 from sphinx.testing.util import SphinxTestApp
 
 
@@ -15,6 +16,7 @@ class TestAutodocIntegration:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that automodule correctly documents Pydantic models."""
         srcdir = tmp_path / "src"
@@ -39,16 +41,21 @@ class TestAutodocIntegration:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        # Check that models are documented
-        assert "SimpleModel" in html_content
-        assert "EmptyModel" in html_content
+        # Verify models are documented as proper class definitions
+        class_sigs = soup.select("dl.py.class dt.sig")
+        documented_classes = {
+            sig.get("id", "").split(".")[-1] for sig in class_sigs
+        }
+        assert "SimpleModel" in documented_classes
+        assert "EmptyModel" in documented_classes
 
     def test_autoclass_documents_pydantic_model(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that autoclass correctly documents a Pydantic model."""
         srcdir = tmp_path / "src"
@@ -73,12 +80,24 @@ class TestAutodocIntegration:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "SimpleModel" in html_content
+        # Verify the class is documented with correct structure
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.basic\\.SimpleModel"
+        )
+        assert class_sig is not None
+
+        # Verify class name appears in signature
+        class_name = class_sig.select_one("span.sig-name.descname")
+        assert class_name is not None
+        assert class_name.get_text(strip=True) == "SimpleModel"
 
     def test_autodoc_skips_pydantic_internals(
-        self, make_app: Callable[..., SphinxTestApp], tmp_path: Path
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that autodoc skips Pydantic internal attributes."""
         srcdir = tmp_path / "src"
@@ -102,18 +121,35 @@ class TestAutodocIntegration:
         app.build()
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        # Pydantic internal attributes should not appear as documented members
-        # These specific pydantic internals must NOT be in the documented output
-        assert "__pydantic_complete__" not in html_content
-        assert "__pydantic_decorators__" not in html_content
-        assert "__pydantic_fields_set__" not in html_content
+        # Get all documented member IDs (methods and attributes)
+        all_sigs = soup.select("dl.py.method dt.sig, dl.py.attribute dt.sig")
+        documented_member_ids = {sig.get("id", "") for sig in all_sigs}
+
+        # These pydantic internals must NOT be documented
+        pydantic_internals = {
+            "__pydantic_complete__",
+            "__pydantic_decorators__",
+            "__pydantic_fields_set__",
+            "__pydantic_private__",
+            "__pydantic_validator__",
+            "__pydantic_core_schema__",
+            "__pydantic_serializer__",
+        }
+
+        # Check that none of the internals appear in documented members
+        for internal in pydantic_internals:
+            for member_id in documented_member_ids:
+                assert internal not in member_id, (
+                    f"Pydantic internal '{internal}' should not be documented"
+                )
 
     def test_autodoc_shows_field_summary(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that autodoc shows field summary for Pydantic models."""
         srcdir = tmp_path / "src"
@@ -137,11 +173,28 @@ class TestAutodocIntegration:
         app.build()
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        # Field names should appear in the output
-        assert "name" in html_content
-        assert "count" in html_content
+        # Find the Fields table by its caption
+        fields_table = None
+        for table in soup.select("table.docutils"):
+            caption = table.select_one("caption")
+            if caption and "Fields" in caption.get_text():
+                fields_table = table
+                break
+
+        assert fields_table is not None, "Fields summary table not found"
+
+        # Verify table has correct header structure
+        headers = [th.get_text(strip=True) for th in fields_table.select("thead th")]
+        assert "Field" in headers
+        assert "Type" in headers
+
+        # Verify field names appear in table body
+        field_cells = fields_table.select("tbody tr td:first-child")
+        field_names = {cell.get_text(strip=True) for cell in field_cells}
+        assert "name" in field_names
+        assert "count" in field_names
 
 
 class TestAutodocWithValidators:
@@ -151,6 +204,7 @@ class TestAutodocWithValidators:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that autodoc documents models with validators."""
         srcdir = tmp_path / "src"
@@ -175,9 +229,20 @@ class TestAutodocWithValidators:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "SingleFieldValidator" in html_content
+        # Verify class is documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.validators\\.SingleFieldValidator"
+        )
+        assert class_sig is not None
+
+        # Verify validator method is documented
+        validator_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.validators\\."
+            "SingleFieldValidator\\.check_positive"
+        )
+        assert validator_sig is not None
 
 
 class TestAutodocWithSettings:
@@ -187,6 +252,7 @@ class TestAutodocWithSettings:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that autodoc documents BaseSettings models."""
         srcdir = tmp_path / "src"
@@ -211,9 +277,17 @@ class TestAutodocWithSettings:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "SimpleSettings" in html_content
+        # Verify settings class is documented with proper structure
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.settings\\.SimpleSettings"
+        )
+        assert class_sig is not None
+
+        class_name = class_sig.select_one("span.sig-name.descname")
+        assert class_name is not None
+        assert class_name.get_text(strip=True) == "SimpleSettings"
 
 
 class TestConfigurationEffects:
@@ -223,6 +297,7 @@ class TestConfigurationEffects:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that field summary can be disabled via config."""
         srcdir = tmp_path / "src"
@@ -248,17 +323,29 @@ class TestConfigurationEffects:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        # Model should be documented but without field summary table
-        assert "SimpleModel" in html
-        # Field summary table header should NOT be present
-        assert ">Fields<" not in html
+        # Model should be documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.basic\\.SimpleModel"
+        )
+        assert class_sig is not None
+
+        # Field summary table should NOT be present
+        fields_table = None
+        for table in soup.select("table.docutils"):
+            caption = table.select_one("caption")
+            if caption and "Fields" in caption.get_text():
+                fields_table = table
+                break
+
+        assert fields_table is None, "Fields table should not be present when disabled"
 
     def test_custom_signature_prefix(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that custom signature prefix works."""
         srcdir = tmp_path / "src"
@@ -283,10 +370,21 @@ class TestConfigurationEffects:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        # The prefix may be split across HTML tags, so check for both words
-        assert "pydantic" in html_content
-        assert "model" in html_content
-        # Also verify the class="property" span exists (signature prefix location)
-        assert 'class="property"' in html_content
+        # Find the signature containing SimpleModel
+        class_sig = None
+        for sig in soup.select("dt.sig"):
+            name_span = sig.select_one("span.sig-name.descname")
+            if name_span and name_span.get_text(strip=True) == "SimpleModel":
+                class_sig = sig
+                break
+
+        assert class_sig is not None, "SimpleModel signature not found"
+
+        # Verify the signature prefix span contains our custom prefix
+        prefix_span = class_sig.select_one("span.property")
+        assert prefix_span is not None, "Signature prefix span not found"
+        prefix_text = prefix_span.get_text(strip=True)
+        assert "pydantic" in prefix_text, f"Expected 'pydantic' in prefix, got: {prefix_text}"
+        assert "model" in prefix_text, f"Expected 'model' in prefix, got: {prefix_text}"

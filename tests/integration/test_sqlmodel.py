@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 from sphinx.testing.util import SphinxTestApp
 
 
@@ -15,6 +16,7 @@ class TestSQLModelTableDocumentation:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that Team table model is documented correctly."""
         srcdir = tmp_path / "src"
@@ -39,16 +41,26 @@ class TestSQLModelTableDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "Team" in html
-        assert "name" in html
-        assert "headquarters" in html
+        # Verify class is documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.sqlmodel_models\\.Team"
+        )
+        assert class_sig is not None, "Team class not found"
+
+        # Verify fields are documented
+        content = soup.select_one("dl.py.class dd")
+        assert content is not None
+        content_text = content.get_text()
+        assert "name" in content_text
+        assert "headquarters" in content_text
 
     def test_hero_table_documented(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that Hero table model with relationships is documented."""
         srcdir = tmp_path / "src"
@@ -73,11 +85,20 @@ class TestSQLModelTableDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "Hero" in html
-        assert "name" in html
-        assert "secret_name" in html
+        # Verify class is documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.sqlmodel_models\\.Hero"
+        )
+        assert class_sig is not None, "Hero class not found"
+
+        # Verify fields are documented
+        content = soup.select_one("dl.py.class dd")
+        assert content is not None
+        content_text = content.get_text()
+        assert "name" in content_text
+        assert "secret_name" in content_text
 
 
 class TestSQLModelDTODocumentation:
@@ -87,6 +108,7 @@ class TestSQLModelDTODocumentation:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that HeroRead DTO is documented correctly."""
         srcdir = tmp_path / "src"
@@ -111,15 +133,24 @@ class TestSQLModelDTODocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "HeroRead" in html
-        assert "id" in html
+        # Verify class is documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.sqlmodel_models\\.HeroRead"
+        )
+        assert class_sig is not None, "HeroRead class not found"
+
+        # Verify id field is documented
+        content = soup.select_one("dl.py.class dd")
+        assert content is not None
+        assert "id" in content.get_text()
 
     def test_hero_create_dto(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that HeroCreate DTO is documented correctly."""
         srcdir = tmp_path / "src"
@@ -144,16 +175,26 @@ class TestSQLModelDTODocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "HeroCreate" in html
-        assert "name" in html
-        assert "secret_name" in html
+        # Verify class is documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.sqlmodel_models\\.HeroCreate"
+        )
+        assert class_sig is not None, "HeroCreate class not found"
+
+        # Verify fields are documented
+        content = soup.select_one("dl.py.class dd")
+        assert content is not None
+        content_text = content.get_text()
+        assert "name" in content_text
+        assert "secret_name" in content_text
 
     def test_hero_update_dto(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that HeroUpdate DTO is documented correctly."""
         srcdir = tmp_path / "src"
@@ -178,10 +219,18 @@ class TestSQLModelDTODocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "HeroUpdate" in html
-        assert "name" in html
+        # Verify class is documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.sqlmodel_models\\.HeroUpdate"
+        )
+        assert class_sig is not None, "HeroUpdate class not found"
+
+        # Verify name field is documented
+        content = soup.select_one("dl.py.class dd")
+        assert content is not None
+        assert "name" in content.get_text()
 
 
 class TestSQLModelInheritance:
@@ -191,6 +240,7 @@ class TestSQLModelInheritance:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that HeroReadWithTeam (inherits from HeroRead) is documented."""
         srcdir = tmp_path / "src"
@@ -216,10 +266,18 @@ class TestSQLModelInheritance:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "HeroReadWithTeam" in html
-        assert "team" in html
+        # Verify class is documented
+        class_sig = soup.select_one(
+            "dt.sig#tests\\.assets\\.models\\.sqlmodel_models\\.HeroReadWithTeam"
+        )
+        assert class_sig is not None, "HeroReadWithTeam class not found"
+
+        # Verify team field is documented
+        content = soup.select_one("dl.py.class dd")
+        assert content is not None
+        assert "team" in content.get_text()
 
 
 class TestSQLModelModule:
@@ -229,6 +287,7 @@ class TestSQLModelModule:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test documenting entire SQLModel module."""
         srcdir = tmp_path / "src"
@@ -253,10 +312,13 @@ class TestSQLModelModule:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        # All models should be documented
-        assert "Team" in html
-        assert "Hero" in html
-        assert "HeroRead" in html
-        assert "HeroCreate" in html
+        # Verify all models are documented
+        class_sigs = soup.select("dl.py.class dt.sig")
+        documented_classes = {sig.get("id", "").split(".")[-1] for sig in class_sigs}
+
+        assert "Team" in documented_classes
+        assert "Hero" in documented_classes
+        assert "HeroRead" in documented_classes
+        assert "HeroCreate" in documented_classes

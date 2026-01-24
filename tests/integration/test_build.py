@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 from sphinx.testing.util import SphinxTestApp
 
 
@@ -39,6 +40,7 @@ class TestSphinxBuild:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that pydantic-model directive works in build."""
         srcdir = tmp_path / "src"
@@ -62,13 +64,23 @@ class TestSphinxBuild:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
-        assert "SimpleModel" in html
+        soup = parse_html((outdir / "index.html").read_text())
+
+        # Verify model is documented as a class
+        class_sig = None
+        for sig in soup.select("dt.sig"):
+            name_span = sig.select_one("span.sig-name.descname")
+            if name_span and name_span.get_text(strip=True) == "SimpleModel":
+                class_sig = sig
+                break
+
+        assert class_sig is not None, "SimpleModel not found in output"
 
     def test_build_with_pydantic_settings_directive(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that pydantic-settings directive works in build."""
         srcdir = tmp_path / "src"
@@ -92,13 +104,23 @@ class TestSphinxBuild:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
-        assert "SimpleSettings" in html
+        soup = parse_html((outdir / "index.html").read_text())
+
+        # Verify settings class is documented
+        class_sig = None
+        for sig in soup.select("dt.sig"):
+            name_span = sig.select_one("span.sig-name.descname")
+            if name_span and name_span.get_text(strip=True) == "SimpleSettings":
+                class_sig = sig
+                break
+
+        assert class_sig is not None, "SimpleSettings not found in output"
 
     def test_build_with_json_schema_option(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that show-json option works in build."""
         srcdir = tmp_path / "src"
@@ -123,11 +145,16 @@ class TestSphinxBuild:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
-        # JSON schema should contain these markers (may be HTML-encoded)
-        assert "type" in html and ("properties" in html or "string" in html)
-        # Verify it's in a JSON code block
-        assert "highlight-json" in html
+        soup = parse_html((outdir / "index.html").read_text())
+
+        # Verify JSON code block exists with correct highlighting class
+        json_block = soup.select_one("div.highlight-json")
+        assert json_block is not None, "JSON code block not found"
+
+        # Verify JSON content has expected structure (type and properties)
+        json_content = json_block.get_text()
+        assert "type" in json_content, "JSON schema should contain 'type'"
+        assert "properties" in json_content or "string" in json_content
 
     def test_build_generates_html_output(
         self,
@@ -161,8 +188,9 @@ class TestSphinxBuild:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
-        """Test that generated HTML contains the model name."""
+        """Test that generated HTML contains the model name in proper structure."""
         srcdir = tmp_path / "src"
         srcdir.mkdir()
 
@@ -182,16 +210,23 @@ class TestSphinxBuild:
         app.build()
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "SimpleModel" in html_content
+        # Verify model name appears in the signature structure
+        class_names = {
+            sig.select_one("span.sig-name.descname").get_text(strip=True)
+            for sig in soup.select("dt.sig")
+            if sig.select_one("span.sig-name.descname")
+        }
+        assert "SimpleModel" in class_names
 
     def test_html_contains_field_names(
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
-        """Test that generated HTML contains field names from field summary."""
+        """Test that generated HTML contains field names in field summary table."""
         srcdir = tmp_path / "src"
         srcdir.mkdir()
 
@@ -212,11 +247,23 @@ class TestSphinxBuild:
         app.build()
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        # SimpleModel has 'name' and 'count' fields
-        assert "name" in html_content
-        assert "count" in html_content
+        # Find the Fields table
+        fields_table = None
+        for table in soup.select("table.docutils"):
+            caption = table.select_one("caption")
+            if caption and "Fields" in caption.get_text():
+                fields_table = table
+                break
+
+        assert fields_table is not None, "Fields table not found"
+
+        # Verify field names appear in table body
+        field_cells = fields_table.select("tbody tr td:first-child")
+        field_names = {cell.get_text(strip=True) for cell in field_cells}
+        assert "name" in field_names, f"Expected 'name' field, got: {field_names}"
+        assert "count" in field_names, f"Expected 'count' field, got: {field_names}"
 
 
 class TestBuildWarnings:
@@ -249,7 +296,7 @@ class TestBuildWarnings:
         # Get warnings from the warning stream
         warnings = app._warning.getvalue()
 
-        # Should have no warnings about our model - use specific assertions
+        # Should have no warnings about our model
         assert "Cannot find" not in warnings
         assert "SimpleModel" not in warnings or "error" not in warnings.lower()
 
@@ -279,7 +326,7 @@ class TestBuildWarnings:
 
         warnings = app._warning.getvalue()
 
-        # Warning should mention the missing model - use specific assertions
+        # Warning should mention the missing model
         assert "FakeModel" in warnings or "nonexistent" in warnings
 
 
@@ -290,6 +337,7 @@ class TestMultipleModels:
         self,
         make_app: Callable[..., SphinxTestApp],
         tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
     ) -> None:
         """Test that multiple models can be documented."""
         srcdir = tmp_path / "src"
@@ -317,8 +365,14 @@ class TestMultipleModels:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html_content = (outdir / "index.html").read_text()
+        soup = parse_html((outdir / "index.html").read_text())
 
-        assert "SimpleModel" in html_content
-        assert "DocumentedModel" in html_content
-        assert "FieldWithConstraints" in html_content
+        # Verify all models are documented
+        class_names = {
+            sig.select_one("span.sig-name.descname").get_text(strip=True)
+            for sig in soup.select("dt.sig")
+            if sig.select_one("span.sig-name.descname")
+        }
+        assert "SimpleModel" in class_names
+        assert "DocumentedModel" in class_names
+        assert "FieldWithConstraints" in class_names
