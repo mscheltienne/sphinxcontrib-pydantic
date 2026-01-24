@@ -6,7 +6,6 @@
 
 # sphinxcontrib-pydantic
 
-erer
 A Sphinx extension for documenting Pydantic models in your documentation.
 
 This project was inspired by [autodoc_pydantic](https://github.com/mansenfranzen/autodoc_pydantic),
