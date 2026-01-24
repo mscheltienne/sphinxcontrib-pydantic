@@ -1,0 +1,47 @@
+name: examples
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
+  cancel-in-progress: true
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1'
+
+env:
+  UV_LOCKED: true
+
+jobs:
+  build:
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu]
+        python-version: ["3.13"]
+    name: ${{ matrix.os }} - py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          activate-environment: true
+          python-version: ${{ matrix.python-version }}
+      - run: |
+          uv sync -q --no-default-groups --group test
+          uv pip install -e examples/basic/
+          uv pip install -e examples/advanced/
+          uv pip install -e examples/autosummary/
+      - name: Build basic example
+        run: make -C examples/basic/doc html
+      - name: Build advanced example
+        run: make -C examples/advanced/doc html
+      - name: Build autosummary example
+        run: make -C examples/autosummary/doc html
