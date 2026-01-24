@@ -9,6 +9,7 @@ from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
 from sphinx import addnodes
 from sphinx.util import logging
+from sphinx.util.nodes import make_id
 
 from sphinxcontrib.pydantic._directives._base import PydanticDirective, flag_or_value
 from sphinxcontrib.pydantic._inspection import (
@@ -167,6 +168,16 @@ class PydanticModelDirective(PydanticDirective):
         )
         sig += addnodes.desc_annotation(prefix + " ", prefix + " ")
         sig += addnodes.desc_name(model_info.name, model_info.name)
+
+        # Register the object with the Python domain for cross-referencing
+        if "noindex" not in self.options:
+            fullname = f"{model_info.module}.{model_info.name}"
+            node_id = make_id(self.env, self.state.document, "", fullname)
+            sig["ids"].append(node_id)
+            self.state.document.note_explicit_target(sig)
+
+            domain = self.env.domains.python_domain
+            domain.note_object(fullname, "class", node_id, location=sig)
 
         desc += sig
 
