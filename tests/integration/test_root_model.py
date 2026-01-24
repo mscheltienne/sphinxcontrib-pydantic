@@ -45,7 +45,8 @@ class TestRootModelDocumentation:
         assert "IntList" in index_html
         # Should contain 'Root Type' instead of a field table with 'root'
         assert "Root Type" in index_html
-        assert "list[int]" in index_html or "list" in index_html
+        # Type should be fully rendered
+        assert "list[int]" in index_html
 
     def test_root_model_with_validator_shows_validators(
         self,

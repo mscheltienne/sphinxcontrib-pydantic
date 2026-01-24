@@ -138,6 +138,10 @@ class TestGenericModelDocumentation:
 
         assert app.statuscode == 0
 
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+        assert "ConcreteWithValidator" in html
+
     def test_bounded_generic(
         self,
         make_app: Callable[..., SphinxTestApp],

@@ -61,6 +61,10 @@ class TestSphinxBuild:
 
         assert app.statuscode == 0
 
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+        assert "SimpleModel" in html
+
     def test_build_with_pydantic_settings_directive(
         self,
         make_app: Callable[..., SphinxTestApp],
@@ -86,6 +90,10 @@ class TestSphinxBuild:
         app.build()
 
         assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+        assert "SimpleSettings" in html
 
     def test_build_with_json_schema_option(
         self,
@@ -113,6 +121,13 @@ class TestSphinxBuild:
         app.build()
 
         assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+        # JSON schema should contain these markers (may be HTML-encoded)
+        assert "type" in html and ("properties" in html or "string" in html)
+        # Verify it's in a JSON code block
+        assert "highlight-json" in html
 
     def test_build_generates_html_output(
         self,
@@ -234,8 +249,9 @@ class TestBuildWarnings:
         # Get warnings from the warning stream
         warnings = app._warning.getvalue()
 
-        # Should have no warnings about our model
-        assert "SimpleModel" not in warnings or "Cannot find" not in warnings
+        # Should have no warnings about our model - use specific assertions
+        assert "Cannot find" not in warnings
+        assert "SimpleModel" not in warnings or "error" not in warnings.lower()
 
     def test_warning_for_nonexistent_model(
         self,
@@ -263,8 +279,8 @@ class TestBuildWarnings:
 
         warnings = app._warning.getvalue()
 
-        # Should have a warning about the model
-        assert "Cannot find" in warnings or "FakeModel" in warnings
+        # Warning should mention the missing model - use specific assertions
+        assert "FakeModel" in warnings or "nonexistent" in warnings
 
 
 class TestMultipleModels:

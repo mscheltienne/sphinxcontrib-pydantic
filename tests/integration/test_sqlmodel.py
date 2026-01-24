@@ -114,6 +114,7 @@ class TestSQLModelDTODocumentation:
         html = (outdir / "index.html").read_text()
 
         assert "HeroRead" in html
+        assert "id" in html
 
     def test_hero_create_dto(
         self,
@@ -176,6 +177,12 @@ class TestSQLModelDTODocumentation:
 
         assert app.statuscode == 0
 
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+
+        assert "HeroUpdate" in html
+        assert "name" in html
+
 
 class TestSQLModelInheritance:
     """Tests for SQLModel inheritance patterns."""
@@ -212,6 +219,7 @@ class TestSQLModelInheritance:
         html = (outdir / "index.html").read_text()
 
         assert "HeroReadWithTeam" in html
+        assert "team" in html
 
 
 class TestSQLModelModule:

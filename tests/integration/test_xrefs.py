@@ -39,6 +39,13 @@ class TestCrossReferenceResolution:
 
         assert app.statuscode == 0
 
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+
+        assert "SingleFieldValidator" in html
+        assert "check_positive" in html
+        assert "value" in html
+
     def test_build_succeeds_with_validators(
         self,
         make_app: Callable[..., SphinxTestApp],
@@ -65,6 +72,12 @@ class TestCrossReferenceResolution:
         app.build()
 
         assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+
+        assert "MultiFieldValidator" in html
+        assert "check_bounds" in html
 
     def test_html_contains_validator_names(
         self,

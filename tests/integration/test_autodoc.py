@@ -104,12 +104,11 @@ class TestAutodocIntegration:
         outdir = Path(app.outdir)
         html_content = (outdir / "index.html").read_text()
 
-        # Pydantic internal attributes should not appear
-        assert (
-            "model_fields" not in html_content or "model_fields =" not in html_content
-        )
+        # Pydantic internal attributes should not appear as documented members
+        # These specific pydantic internals must NOT be in the documented output
         assert "__pydantic_complete__" not in html_content
         assert "__pydantic_decorators__" not in html_content
+        assert "__pydantic_fields_set__" not in html_content
 
     def test_autodoc_shows_field_summary(
         self,
@@ -247,6 +246,14 @@ class TestConfigurationEffects:
         app.build()
 
         assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+
+        # Model should be documented but without field summary table
+        assert "SimpleModel" in html
+        # Field summary table header should NOT be present
+        assert ">Fields<" not in html
 
     def test_custom_signature_prefix(
         self,

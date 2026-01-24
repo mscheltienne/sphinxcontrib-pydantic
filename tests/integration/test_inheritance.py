@@ -179,3 +179,7 @@ class TestInheritedModelValidators:
         app.build()
 
         assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        html = (outdir / "index.html").read_text()
+        assert "ChildWithInheritedModelValidator" in html
