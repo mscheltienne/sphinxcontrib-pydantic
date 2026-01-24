@@ -170,6 +170,30 @@ def _format_constraints(constraints: dict) -> str:
     return ", ".join(parts)
 
 
+def generate_root_type_line(root_field: FieldInfo) -> list[str]:
+    """Generate a root type line for RootModel classes.
+
+    Instead of a full table with just a "root" field, this generates
+    a cleaner single-line representation of the root type.
+
+    Parameters
+    ----------
+    root_field : FieldInfo
+        The FieldInfo for the "root" field of a RootModel.
+
+    Returns
+    -------
+    list[str]
+        RST lines showing the root type.
+    """
+    type_str = format_type_annotation(root_field.annotation)
+    lines: list[str] = []
+    lines.append("")
+    lines.append(f"**Root Type:** ``{type_str}``")
+    lines.append("")
+    return lines
+
+
 def generate_validator_summary_table(
     validators: list[ValidatorInfo],
     *,

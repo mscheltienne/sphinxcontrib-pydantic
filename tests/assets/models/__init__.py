@@ -38,6 +38,12 @@ from tests.assets.models.inheritance import (
     GrandchildModel,
 )
 from tests.assets.models.nested import Address, Company, Person, RecursiveModel
+from tests.assets.models.root_model import (
+    ConstrainedIntList,
+    IntList,
+    NestedModel,
+    StringMapping,
+)
 from tests.assets.models.sqlmodel_models import (
     Hero,
     HeroCreate,

@@ -17,6 +17,7 @@ from sphinxcontrib.pydantic._inspection import (
 from sphinxcontrib.pydantic._rendering import (
     create_role_reference,
     generate_field_summary_table,
+    generate_root_type_line,
     generate_validator_summary_table,
 )
 
@@ -289,6 +290,9 @@ def _add_field_summary(
 ) -> None:
     """Add field summary table to docstring lines.
 
+    For RootModel classes, this generates a cleaner "Root Type" line instead
+    of a full field summary table with just a "root" entry.
+
     Parameters
     ----------
     model : type
@@ -300,26 +304,34 @@ def _add_field_summary(
     lines : list[str]
         The docstring lines to modify.
     """
-    show_alias = getattr(app.config, "sphinxcontrib_pydantic_field_show_alias", True)
-    show_default = getattr(
-        app.config, "sphinxcontrib_pydantic_field_show_default", True
-    )
-    show_required = getattr(
-        app.config, "sphinxcontrib_pydantic_field_show_required", True
-    )
-    show_constraints = getattr(
-        app.config, "sphinxcontrib_pydantic_field_show_constraints", True
-    )
-
     try:
         fields = [get_field_info(model, name) for name in model_info.field_names]
-        summary_lines = generate_field_summary_table(
-            fields,
-            show_alias=show_alias,
-            show_default=show_default,
-            show_required=show_required,
-            show_constraints=show_constraints,
-        )
+
+        # For RootModel, use a cleaner root type display
+        if model_info.is_root_model and len(fields) == 1 and fields[0].name == "root":
+            summary_lines = generate_root_type_line(fields[0])
+        else:
+            # Regular field summary table
+            show_alias = getattr(
+                app.config, "sphinxcontrib_pydantic_field_show_alias", True
+            )
+            show_default = getattr(
+                app.config, "sphinxcontrib_pydantic_field_show_default", True
+            )
+            show_required = getattr(
+                app.config, "sphinxcontrib_pydantic_field_show_required", True
+            )
+            show_constraints = getattr(
+                app.config, "sphinxcontrib_pydantic_field_show_constraints", True
+            )
+            summary_lines = generate_field_summary_table(
+                fields,
+                show_alias=show_alias,
+                show_default=show_default,
+                show_required=show_required,
+                show_constraints=show_constraints,
+            )
+
         if summary_lines:
             lines.append("")
             lines.extend(summary_lines)

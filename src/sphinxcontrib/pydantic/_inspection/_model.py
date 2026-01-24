@@ -67,6 +67,27 @@ def is_pydantic_model(obj: Any) -> bool:
         return False
 
 
+def is_root_model(obj: Any) -> bool:
+    """Check if an object is a Pydantic RootModel class.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to check.
+
+    Returns
+    -------
+    bool
+        True if the object is a Pydantic RootModel class, False otherwise.
+
+    Notes
+    -----
+    RootModel is a special Pydantic model that wraps a single value type.
+    It has a single ``root`` field and ``__pydantic_root_model__`` set to True.
+    """
+    return is_pydantic_model(obj) and getattr(obj, "__pydantic_root_model__", False)
+
+
 @dataclass(frozen=True, slots=True)
 class ModelInfo:
     """Information about a Pydantic model.
@@ -91,6 +112,8 @@ class ModelInfo:
         Names of all model validators in the model.
     model : type[BaseModel]
         Reference to the original model class.
+    is_root_model : bool
+        Whether the model is a RootModel (wraps a single value type).
     """
 
     name: str
@@ -102,6 +125,7 @@ class ModelInfo:
     validator_names: tuple[str, ...] = field(default_factory=tuple)
     model_validator_names: tuple[str, ...] = field(default_factory=tuple)
     model: type[BaseModel] = field(repr=False, default=None)
+    is_root_model: bool = False
 
 
 def get_model_info(model: type[BaseModel]) -> ModelInfo:
@@ -152,4 +176,5 @@ def get_model_info(model: type[BaseModel]) -> ModelInfo:
         validator_names=tuple(validator_names),
         model_validator_names=tuple(model_validator_names),
         model=model,
+        is_root_model=is_root_model(model),
     )

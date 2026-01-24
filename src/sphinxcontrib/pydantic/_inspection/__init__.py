@@ -10,6 +10,7 @@ from sphinxcontrib.pydantic._inspection._model import (
     get_model_info,
     is_pydantic_model,
     is_pydantic_settings,
+    is_root_model,
 )
 from sphinxcontrib.pydantic._inspection._references import (
     ASTERISK_FIELD_NAME,
