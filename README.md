@@ -9,7 +9,8 @@
 A Sphinx extension for documenting Pydantic models in your documentation.
 
 This project was inspired by [autodoc_pydantic](https://github.com/mansenfranzen/autodoc_pydantic),
-which has gone unmaintained. Unlike its predecessor, `sphinxcontrib-pydantic` focuses
+which I have been using for years but has gone unmaintained anbd is now incompatible
+with Sphinx 9. Unlike its predecessor, `sphinxcontrib-pydantic` focuses
 exclusively on modern versions: **Pydantic v2+** and **Sphinx 9.0+** (Python 3.11+).
 
 This project was vibe-coded using Claude Code (Opus 4.5); using `autodoc_pydantic` as
