@@ -58,6 +58,47 @@ class TestFormatTypeAnnotation:
         """Test formatting of string annotations (forward references)."""
         assert format_type_annotation("MyClass") == "MyClass"
 
+    def test_formats_literal_type(self) -> None:
+        """Test formatting of Literal types."""
+        from typing import Literal
+
+        result = format_type_annotation(Literal["a", "b", "c"])
+        # Sphinx smart mode may add module prefix with ~
+        assert "Literal" in result
+        assert "'a'" in result
+        assert "'b'" in result
+        assert "'c'" in result
+
+    def test_formats_callable_type(self) -> None:
+        """Test formatting of Callable types."""
+        from collections.abc import Callable
+
+        result = format_type_annotation(Callable[[int, str], bool])
+        assert "Callable" in result
+        assert "int" in result
+        assert "str" in result
+        assert "bool" in result
+
+    def test_formats_annotated_type(self) -> None:
+        """Test formatting of Annotated types."""
+        from typing import Annotated
+
+        from pydantic import Field
+
+        result = format_type_annotation(Annotated[int, Field(gt=0)])
+        # Annotated types should show the base type
+        assert "int" in result
+
+    def test_formats_tuple_type(self) -> None:
+        """Test formatting of tuple types."""
+        result = format_type_annotation(tuple[int, str, float])
+        assert result == "tuple[int, str, float]"
+
+    def test_formats_tuple_ellipsis(self) -> None:
+        """Test formatting of variable-length tuple."""
+        result = format_type_annotation(tuple[int, ...])
+        assert result == "tuple[int, ...]"
+
 
 class TestFormatDefaultValue:
     """Tests for format_default_value function."""

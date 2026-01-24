@@ -100,7 +100,8 @@ class TestGetValidatorFieldMappings:
 
         mapping = mappings[0]
         # Should be: module.ClassName.field_name
-        assert mapping.field_ref.endswith(".SingleFieldValidator.value")
+        expected = "tests.assets.models.validators.SingleFieldValidator.value"
+        assert mapping.field_ref == expected
 
     def test_validator_ref_format(self) -> None:
         """Test that validator_ref has correct format."""
@@ -110,7 +111,8 @@ class TestGetValidatorFieldMappings:
 
         mapping = mappings[0]
         # Should be: module.ClassName.validator_name
-        assert mapping.validator_ref.endswith(".SingleFieldValidator.check_positive")
+        expected = "tests.assets.models.validators.SingleFieldValidator.check_positive"
+        assert mapping.validator_ref == expected
 
 
 class TestFilterMappingsByValidator:
@@ -181,6 +183,12 @@ class TestInheritanceScenarios:
         # Should have the inherited validator
         validator_names = {m.validator_name for m in mappings}
         assert "validate_base_field" in validator_names
+
+        # Verify the ref points to the child class for documentation purposes
+        inherited_mapping = next(
+            m for m in mappings if m.validator_name == "validate_base_field"
+        )
+        assert "ChildModelSimple" in inherited_mapping.validator_ref
 
     def test_child_with_own_and_inherited_validators(self) -> None:
         """Test child model with both own and inherited validators."""

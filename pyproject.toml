@@ -16,6 +16,7 @@ style = [
   'yamllint',
 ]
 test = [
+  'beautifulsoup4>=4.12',
   'pydantic-settings>=2.0',
   'pytest-cov',
   'pytest-randomly',

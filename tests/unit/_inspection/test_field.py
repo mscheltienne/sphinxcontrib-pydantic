@@ -10,6 +10,7 @@ from tests.assets.models.fields import (
     FieldWithAlias,
     FieldWithConstraints,
     FieldWithDefaults,
+    FieldWithMetadata,
 )
 
 
@@ -135,6 +136,13 @@ class TestFieldInfoConstraints:
 
         assert info.constraints == {}
 
+    def test_extracts_all_constraints_together(self) -> None:
+        """Test that all constraints are extracted together."""
+        info = get_field_info(FieldWithConstraints, "bounded")
+
+        # Verify exact constraints dictionary, not just individual values
+        assert info.constraints == {"ge": 0, "le": 100}
+
 
 class TestFieldInfoDefaultFactory:
     """Tests for field default_factory extraction."""
@@ -156,20 +164,31 @@ class TestFieldInfo:
     """Tests for FieldInfo dataclass."""
 
     def test_has_required_attributes(self) -> None:
-        """Test that FieldInfo has all required attributes."""
+        """Test that FieldInfo has all required attributes with correct values."""
         info = get_field_info(SimpleModel, "name")
 
-        # Basic attributes
-        assert hasattr(info, "name")
-        assert hasattr(info, "annotation")
-        assert hasattr(info, "default")
-        assert hasattr(info, "has_default")
-        assert hasattr(info, "has_default_factory")
-        assert hasattr(info, "is_required")
+        # Basic attributes - verify values, not just existence
+        assert info.name == "name"
+        assert info.annotation is str
+        assert info.has_default is False
+        assert info.has_default_factory is False
+        assert info.is_required is True
 
-        # Metadata
-        assert hasattr(info, "alias")
-        assert hasattr(info, "description")
-        assert hasattr(info, "constraints")
-        assert hasattr(info, "title")
-        assert hasattr(info, "examples")
+        # Metadata - verify None values for fields without metadata
+        assert info.alias is None
+        assert info.description is None
+        assert info.constraints == {}
+        assert info.title is None
+        assert info.examples is None
+
+    def test_title_value_extracted(self) -> None:
+        """Test that title value is correctly extracted."""
+        info = get_field_info(FieldWithMetadata, "titled")
+
+        assert info.title == "Titled Field"
+
+    def test_examples_value_extracted(self) -> None:
+        """Test that examples are correctly extracted."""
+        info = get_field_info(FieldWithMetadata, "example_field")
+
+        assert info.examples == ["example1", "example2"]

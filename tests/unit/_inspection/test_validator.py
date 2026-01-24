@@ -26,6 +26,8 @@ class TestGetValidatorInfo:
         info = get_validator_info(SingleFieldValidator, "check_positive")
 
         assert info.fields == ("value",)
+        assert info.is_model_validator is False
+        assert info.mode == "after"  # Verify default mode
 
     def test_extracts_multiple_validated_fields(self) -> None:
         """Test that multiple validated fields are extracted."""
@@ -50,6 +52,16 @@ class TestGetValidatorInfo:
         info = get_validator_info(SingleFieldValidator, "check_positive")
 
         assert info.mode == "after"
+
+    def test_extracts_wrap_mode(self) -> None:
+        """Test that wrap mode is extracted."""
+        from tests.assets.models.validators import WrapValidator
+
+        info = get_validator_info(WrapValidator, "wrap_value")
+
+        assert info.mode == "wrap"
+        assert info.fields == ("value",)
+        assert info.is_model_validator is False
 
     def test_extracts_docstring(self) -> None:
         """Test that validator docstring is extracted."""

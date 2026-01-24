@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, field_validator, model_validator
+from pydantic_core import core_schema
 
 if TYPE_CHECKING:
-    from typing import Any
+    from pydantic import ValidationInfo
 
 
 class SingleFieldValidator(BaseModel):
@@ -79,3 +80,20 @@ class ModelValidatorBefore(BaseModel):
         if not isinstance(values, dict):
             raise ValueError("must be dict")
         return values
+
+
+class WrapValidator(BaseModel):
+    """Model with wrap mode validator."""
+
+    value: int
+
+    @field_validator("value", mode="wrap")
+    @classmethod
+    def wrap_value(
+        cls,
+        v: Any,
+        handler: core_schema.ValidatorFunctionWrapHandler,
+        info: ValidationInfo,
+    ) -> int:
+        """Wrap the value validation."""
+        return handler(v)

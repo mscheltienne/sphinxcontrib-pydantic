@@ -80,12 +80,15 @@ class TestGenerateFieldSummaryTable:
 
         # Check that result is a list of lines
         assert isinstance(result, list)
-        assert len(result) > 0
 
-        # Check for table directive
         table_content = "\n".join(result)
         assert ".. list-table:: Fields" in table_content
         assert ":header-rows: 1" in table_content
+
+        # Count data rows (each row starts with "* -")
+        data_rows = [line for line in result if line.strip().startswith("* -")]
+        # Should have header row + 2 data rows
+        assert len(data_rows) == 3  # 1 header + 2 fields
 
     def test_includes_field_names(self) -> None:
         """Test that field names are included in the table."""
@@ -180,6 +183,19 @@ class TestGenerateFieldSummaryTable:
 
         # Alias column should not appear when no fields have aliases
         assert "Alias" not in table_content
+
+    def test_field_order_preserved_in_table(self) -> None:
+        """Test that fields appear in the same order as provided."""
+        fields = [
+            get_field_info(SimpleModel, "name"),
+            get_field_info(SimpleModel, "count"),
+        ]
+        result = generate_field_summary_table(fields)
+        table_content = "\n".join(result)
+
+        name_pos = table_content.find("``name``")
+        count_pos = table_content.find("``count``")
+        assert name_pos < count_pos  # name should appear before count
 
 
 class TestGenerateRootTypeLine:

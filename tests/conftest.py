@@ -8,6 +8,7 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
+from bs4 import BeautifulSoup
 from sphinx.testing.util import SphinxTestApp
 
 # Add tests directory to path so assets can be imported
@@ -103,3 +104,19 @@ def make_app(
 def app(make_app: Callable[..., SphinxTestApp]) -> SphinxTestApp:
     """Provide a basic Sphinx test application."""
     return make_app()
+
+
+@pytest.fixture
+def parse_html() -> Callable[[str], BeautifulSoup]:
+    """Fixture to parse HTML content.
+
+    Returns
+    -------
+    Callable[[str], BeautifulSoup]
+        Function that parses HTML string into BeautifulSoup object.
+    """
+
+    def _parse(html: str) -> BeautifulSoup:
+        return BeautifulSoup(html, "html.parser")
+
+    return _parse

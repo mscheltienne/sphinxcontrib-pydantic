@@ -98,14 +98,13 @@ class TestGetModelInfo:
         """Test that field names are extracted."""
         info = get_model_info(SimpleModel)
 
-        assert "name" in info.field_names
-        assert "count" in info.field_names
+        assert set(info.field_names) == {"name", "count"}
 
     def test_extracts_validator_names(self) -> None:
         """Test that validator names are extracted."""
         info = get_model_info(SingleFieldValidator)
 
-        assert "check_positive" in info.validator_names
+        assert set(info.validator_names) == {"check_positive"}
 
     def test_empty_model_has_no_fields(self) -> None:
         """Test that empty model has no fields."""
@@ -153,13 +152,15 @@ class TestModelInfo:
         """Test that computed field names are extracted."""
         info = get_model_info(ComputedFieldModel)
 
-        assert "full_name" in info.computed_field_names
+        assert set(info.computed_field_names) == {"full_name"}
+        # Verify computed fields are not in regular field_names
+        assert "full_name" not in info.field_names
 
     def test_model_validators_extracted(self) -> None:
         """Test that model validators are extracted."""
         info = get_model_info(ModelValidatorAfter)
 
-        assert "passwords_match" in info.model_validator_names
+        assert set(info.model_validator_names) == {"passwords_match"}
 
 
 class TestIsPydanticSettings:
@@ -259,8 +260,8 @@ class TestModelInfoRootModel:
         """Test that RootModel has a 'root' field."""
         info = get_model_info(IntList)
 
-        assert "root" in info.field_names
-        assert len(info.field_names) == 1
+        # Exact match - RootModel should only have 'root' field
+        assert set(info.field_names) == {"root"}
 
     def test_root_model_with_validator_has_validators(self) -> None:
         """Test that RootModel validators are extracted."""

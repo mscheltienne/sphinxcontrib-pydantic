@@ -58,4 +58,5 @@ from tests.assets.models.validators import (
     ModelValidatorBefore,
     MultiFieldValidator,
     SingleFieldValidator,
+    WrapValidator,
 )
