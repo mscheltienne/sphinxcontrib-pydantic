@@ -71,6 +71,9 @@ def generate_field_summary_table(
     if not fields:
         return []
 
+    # Sort fields alphabetically by name
+    fields = sorted(fields, key=lambda f: f.name)
+
     lines: list[str] = []
 
     # Determine which columns to include
@@ -219,6 +222,9 @@ def generate_validator_summary_table(
     """
     if not validators:
         return []
+
+    # Sort validators alphabetically by name
+    validators = sorted(validators, key=lambda v: v.name)
 
     lines: list[str] = []
 
