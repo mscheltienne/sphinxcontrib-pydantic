@@ -64,7 +64,7 @@ class TestSphinxBuild:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify model is documented as a class
         class_sig = None
@@ -104,7 +104,7 @@ class TestSphinxBuild:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify settings class is documented
         class_sig = None
@@ -145,7 +145,7 @@ class TestSphinxBuild:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify JSON code block exists with correct highlighting class
         json_block = soup.select_one("div.highlight-json")
@@ -210,7 +210,7 @@ class TestSphinxBuild:
         app.build()
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify model name appears in the signature structure
         class_names = {
@@ -247,7 +247,7 @@ class TestSphinxBuild:
         app.build()
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Find the Fields table
         fields_table = None
@@ -365,7 +365,7 @@ class TestMultipleModels:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify all models are documented
         class_names = {

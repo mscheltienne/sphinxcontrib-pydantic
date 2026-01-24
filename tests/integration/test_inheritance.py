@@ -41,7 +41,7 @@ class TestInheritanceDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -84,7 +84,7 @@ class TestInheritanceDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Find the Fields table
         fields_table = None
@@ -131,7 +131,7 @@ class TestInheritanceDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify the validator method is documented
         validator_sig = soup.select_one(
@@ -174,7 +174,7 @@ class TestMultiLevelInheritance:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -220,7 +220,7 @@ class TestInheritedModelValidators:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(

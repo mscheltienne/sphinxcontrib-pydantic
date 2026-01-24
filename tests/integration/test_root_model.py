@@ -41,7 +41,7 @@ class TestRootModelDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify IntList class is documented
         class_sig = soup.select_one(
@@ -89,7 +89,7 @@ class TestRootModelDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -133,7 +133,7 @@ class TestRootModelDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -177,7 +177,7 @@ class TestRootModelDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -223,7 +223,7 @@ class TestRootModelAutomodule:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify all RootModel classes are documented
         class_sigs = soup.select("dl.py.class dt.sig")

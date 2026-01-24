@@ -41,7 +41,7 @@ class TestAutodocIntegration:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify models are documented as proper class definitions
         class_sigs = soup.select("dl.py.class dt.sig")
@@ -80,7 +80,7 @@ class TestAutodocIntegration:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify the class is documented with correct structure
         class_sig = soup.select_one(
@@ -121,7 +121,7 @@ class TestAutodocIntegration:
         app.build()
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Get all documented member IDs (methods and attributes)
         all_sigs = soup.select("dl.py.method dt.sig, dl.py.attribute dt.sig")
@@ -173,7 +173,7 @@ class TestAutodocIntegration:
         app.build()
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Find the Fields table by its caption
         fields_table = None
@@ -229,7 +229,7 @@ class TestAutodocWithValidators:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -277,7 +277,7 @@ class TestAutodocWithSettings:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify settings class is documented with proper structure
         class_sig = soup.select_one(
@@ -323,7 +323,7 @@ class TestConfigurationEffects:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Model should be documented
         class_sig = soup.select_one(
@@ -370,7 +370,7 @@ class TestConfigurationEffects:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Find the signature containing SimpleModel
         class_sig = None

@@ -39,7 +39,7 @@ class TestSelfReferencingModels:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        html = (outdir / "index.html").read_text(encoding="utf-8")
 
         assert "SelfReferencing" in html
         assert "name" in html
@@ -74,7 +74,7 @@ class TestSelfReferencingModels:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        html = (outdir / "index.html").read_text(encoding="utf-8")
 
         assert "TreeNode" in html
         assert "left" in html
@@ -112,7 +112,7 @@ class TestCircularReferences:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        html = (outdir / "index.html").read_text(encoding="utf-8")
 
         assert "NodeA" in html
         assert "b_ref" in html
@@ -148,7 +148,7 @@ class TestCircularReferences:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        html = (outdir / "index.html").read_text(encoding="utf-8")
 
         assert "NodeA" in html
         assert "NodeB" in html
@@ -185,7 +185,7 @@ class TestStringAnnotations:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        html = (outdir / "index.html").read_text()
+        html = (outdir / "index.html").read_text(encoding="utf-8")
 
         assert "StringAnnotationModel" in html
         assert "related" in html

@@ -41,7 +41,7 @@ class TestSQLModelTableDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -85,7 +85,7 @@ class TestSQLModelTableDocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -133,7 +133,7 @@ class TestSQLModelDTODocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -175,7 +175,7 @@ class TestSQLModelDTODocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -219,7 +219,7 @@ class TestSQLModelDTODocumentation:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -266,7 +266,7 @@ class TestSQLModelInheritance:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sig = soup.select_one(
@@ -312,7 +312,7 @@ class TestSQLModelModule:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify all models are documented
         class_sigs = soup.select("dl.py.class dt.sig")

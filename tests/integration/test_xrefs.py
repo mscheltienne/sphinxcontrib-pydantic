@@ -42,7 +42,7 @@ class TestCrossReferenceResolution:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Find the Validators summary table
         validators_table = None
@@ -96,7 +96,7 @@ class TestCrossReferenceResolution:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Verify class is documented
         class_sigs = soup.select("dl.py.class dt.sig")
@@ -139,7 +139,7 @@ class TestCrossReferenceResolution:
         app.build()
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Validator should be documented as a method
         validator_sig = soup.select_one(
@@ -182,7 +182,7 @@ class TestCrossReferenceResolution:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Model validator should be documented as a method
         validator_sig = soup.select_one(
@@ -230,7 +230,7 @@ class TestValidatorTableStructure:
         assert app.statuscode == 0
 
         outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text())
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
 
         # Find the Validators table
         validators_table = None
