@@ -9,11 +9,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sphinx.util import logging
-from sphinxcontrib.pydantic._version import __version__
 
 from sphinxcontrib.pydantic._autodoc import register_autodoc_handlers
 from sphinxcontrib.pydantic._config import register_config
 from sphinxcontrib.pydantic._directives import register_directives
+from sphinxcontrib.pydantic._version import __version__
 
 if TYPE_CHECKING:
     from typing import Any
