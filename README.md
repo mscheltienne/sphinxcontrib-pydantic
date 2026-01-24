@@ -3,6 +3,7 @@
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![codecov](https://codecov.io/gh/mscheltienne/sphinxcontrib-pydantic/graph/badge.svg?token=AC0qhhaeVW)](https://codecov.io/gh/mscheltienne/sphinxcontrib-pydantic)
 [![tests](https://github.com/mscheltienne/sphinxcontrib-pydantic/actions/workflows/pytest.yaml/badge.svg?branch=main)](https://github.com/mscheltienne/sphinxcontrib-pydantic/actions/workflows/pytest.yaml)
+[![examples](https://github.com/mscheltienne/sphinxcontrib-pydantic/actions/workflows/examples.yaml/badge.svg?branch=main)](https://github.com/mscheltienne/sphinxcontrib-pydantic/actions/workflows/examples.yaml)
 
 # sphinxcontrib-pydantic
 
