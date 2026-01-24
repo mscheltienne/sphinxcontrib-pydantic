@@ -219,3 +219,90 @@ class TestGenerateValidatorSummaryTable:
         """Test that empty list is returned for no validators."""
         result = generate_validator_summary_table([])
         assert result == []
+
+
+class TestValidatorSummaryWithCrossRefs:
+    """Tests for validator summary table with cross-references."""
+
+    def test_generates_validator_xrefs_with_model_path(self) -> None:
+        """Test that validator names become cross-references with model_path."""
+        from tests.assets.models.validators import SingleFieldValidator
+
+        validators = [
+            get_validator_info(SingleFieldValidator, "check_positive"),
+        ]
+        model_path = "tests.assets.models.validators.SingleFieldValidator"
+
+        result = generate_validator_summary_table(validators, model_path=model_path)
+        table_content = "\n".join(result)
+
+        # Should have :py:obj: reference instead of backticks
+        assert ":py:obj:`check_positive <" in table_content
+        assert model_path in table_content
+
+    def test_generates_field_xrefs_with_model_path(self) -> None:
+        """Test that field names become cross-references with model_path."""
+        from tests.assets.models.validators import SingleFieldValidator
+
+        validators = [
+            get_validator_info(SingleFieldValidator, "check_positive"),
+        ]
+        model_path = "tests.assets.models.validators.SingleFieldValidator"
+
+        result = generate_validator_summary_table(
+            validators, list_fields=True, model_path=model_path
+        )
+        table_content = "\n".join(result)
+
+        # Should have :py:obj: reference for field
+        assert ":py:obj:`value <" in table_content
+
+    def test_multi_field_validator_xrefs(self) -> None:
+        """Test that multiple fields get cross-references."""
+        from tests.assets.models.validators import MultiFieldValidator
+
+        validators = [
+            get_validator_info(MultiFieldValidator, "check_bounds"),
+        ]
+        model_path = "tests.assets.models.validators.MultiFieldValidator"
+
+        result = generate_validator_summary_table(
+            validators, list_fields=True, model_path=model_path
+        )
+        table_content = "\n".join(result)
+
+        # Both fields should have references
+        assert ":py:obj:`x <" in table_content
+        assert ":py:obj:`y <" in table_content
+
+    def test_no_xrefs_without_model_path(self) -> None:
+        """Test that no cross-references without model_path."""
+        from tests.assets.models.validators import SingleFieldValidator
+
+        validators = [
+            get_validator_info(SingleFieldValidator, "check_positive"),
+        ]
+
+        result = generate_validator_summary_table(validators)
+        table_content = "\n".join(result)
+
+        # Should have backticks, not :py:obj:
+        assert "``check_positive``" in table_content
+        assert ":py:obj:" not in table_content
+
+    def test_model_validator_no_field_xrefs(self) -> None:
+        """Test that model validators show *model* not field xrefs."""
+        from tests.assets.models.validators import ModelValidatorAfter
+
+        validators = [
+            get_validator_info(ModelValidatorAfter, "passwords_match"),
+        ]
+        model_path = "tests.assets.models.validators.ModelValidatorAfter"
+
+        result = generate_validator_summary_table(
+            validators, list_fields=True, model_path=model_path
+        )
+        table_content = "\n".join(result)
+
+        # Model validators show *model*, not field references
+        assert "*model*" in table_content

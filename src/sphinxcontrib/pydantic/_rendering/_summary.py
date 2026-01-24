@@ -8,6 +8,7 @@ from sphinxcontrib.pydantic._rendering._rst import (
     format_default_value,
     format_type_annotation,
 )
+from sphinxcontrib.pydantic._rendering._xref import create_role_reference
 
 if TYPE_CHECKING:
     from sphinxcontrib.pydantic._inspection import FieldInfo, ValidatorInfo
@@ -147,6 +148,7 @@ def generate_validator_summary_table(
     validators: list[ValidatorInfo],
     *,
     list_fields: bool = True,
+    model_path: str | None = None,
 ) -> list[str]:
     """Generate a validator summary table in RST format.
 
@@ -156,6 +158,9 @@ def generate_validator_summary_table(
         The validators to include in the summary.
     list_fields : bool
         Whether to list validated fields.
+    model_path : str | None
+        The fully qualified model path (e.g., "module.Class"). If provided,
+        cross-references will be generated for validators and fields.
 
     Returns
     -------
@@ -185,7 +190,7 @@ def generate_validator_summary_table(
 
     # Data rows
     for validator in validators:
-        row_data = _get_validator_row_data(validator, columns)
+        row_data = _get_validator_row_data(validator, columns, model_path)
         lines.append("   * - " + row_data[0])
         lines.extend("     - " + cell for cell in row_data[1:])
 
@@ -193,7 +198,11 @@ def generate_validator_summary_table(
     return lines
 
 
-def _get_validator_row_data(validator: ValidatorInfo, columns: list[str]) -> list[str]:
+def _get_validator_row_data(
+    validator: ValidatorInfo,
+    columns: list[str],
+    model_path: str | None = None,
+) -> list[str]:
     """Get the data for a single validator row.
 
     Parameters
@@ -202,6 +211,8 @@ def _get_validator_row_data(validator: ValidatorInfo, columns: list[str]) -> lis
         The validator information.
     columns : list[str]
         The columns to include.
+    model_path : str | None
+        The fully qualified model path for cross-references.
 
     Returns
     -------
@@ -212,15 +223,26 @@ def _get_validator_row_data(validator: ValidatorInfo, columns: list[str]) -> lis
 
     for col in columns:
         if col == "Validator":
-            row.append(f"``{validator.name}``")
+            if model_path:
+                ref = f"{model_path}.{validator.name}"
+                row.append(create_role_reference(validator.name, ref))
+            else:
+                row.append(f"``{validator.name}``")
         elif col == "Mode":
             row.append(validator.mode)
         elif col == "Fields":
             if validator.is_model_validator:
                 row.append("*model*")
             elif validator.fields:
-                fields_str = ", ".join(f"``{f}``" for f in validator.fields)
-                row.append(fields_str)
+                if model_path:
+                    field_refs = [
+                        create_role_reference(f, f"{model_path}.{f}")
+                        for f in validator.fields
+                    ]
+                    row.append(", ".join(field_refs))
+                else:
+                    fields_str = ", ".join(f"``{f}``" for f in validator.fields)
+                    row.append(fields_str)
             else:
                 row.append("")
 

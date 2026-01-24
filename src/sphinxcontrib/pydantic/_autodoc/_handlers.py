@@ -7,12 +7,15 @@ from typing import TYPE_CHECKING
 from sphinx.util import logging
 
 from sphinxcontrib.pydantic._inspection import (
+    filter_mappings_by_field,
     get_field_info,
     get_model_info,
+    get_validator_field_mappings,
     get_validator_info,
     is_pydantic_model,
 )
 from sphinxcontrib.pydantic._rendering import (
+    create_role_reference,
     generate_field_summary_table,
     generate_validator_summary_table,
 )
@@ -167,7 +170,8 @@ def autodoc_process_docstring(
     """Handle autodoc-process-docstring event.
 
     This event handler adds Pydantic-specific documentation (field summaries,
-    validator summaries) to class docstrings for Pydantic models.
+    validator summaries) to class docstrings for Pydantic models, and
+    "Validated by" sections to field attribute docstrings.
 
     Parameters
     ----------
@@ -184,10 +188,20 @@ def autodoc_process_docstring(
     lines : list[str]
         The lines of the docstring (modified in place).
     """
-    # Only process classes
-    if what != "class":
-        return
+    if what == "class":
+        _process_class_docstring(app, name, obj, options, lines)
+    elif what == "attribute":
+        _process_attribute_docstring(app, name, obj, options, lines)
 
+
+def _process_class_docstring(
+    app: Sphinx,
+    name: str,
+    obj: Any,
+    options: dict[str, Any],
+    lines: list[str],
+) -> None:
+    """Process class docstring for Pydantic models."""
     # Only process Pydantic models
     if not is_pydantic_model(obj):
         return
@@ -217,6 +231,54 @@ def autodoc_process_docstring(
     )
     if show_validator_summary and validators:
         _add_validator_summary(obj, model_info, validators, app, lines)
+
+
+def _process_attribute_docstring(
+    app: Sphinx,
+    name: str,
+    obj: Any,
+    options: dict[str, Any],
+    lines: list[str],
+) -> None:
+    """Process attribute docstring to add 'Validated by' section for fields."""
+    # Parse the fully qualified name to get model path and field name
+    parts = name.rsplit(".", 1)
+    if len(parts) != 2:
+        return
+
+    model_path, field_name = parts
+
+    # Try to import the model class
+    try:
+        module_parts = model_path.rsplit(".", 1)
+        if len(module_parts) != 2:
+            return
+        module_name, class_name = module_parts
+        module = __import__(module_name, fromlist=[class_name])
+        model = getattr(module, class_name, None)
+    except (ImportError, AttributeError):
+        return
+
+    if not is_pydantic_model(model):
+        return
+
+    # Check if this is actually a field
+    if field_name not in model.model_fields:
+        return
+
+    # Get validators for this field
+    mappings = get_validator_field_mappings(model)
+    field_mappings = filter_mappings_by_field(mappings, field_name)
+
+    if not field_mappings:
+        return
+
+    # Add "Validated by" section
+    lines.append("")
+    lines.append(":Validated by:")
+    for mapping in sorted(field_mappings, key=lambda m: m.validator_name):
+        ref = create_role_reference(mapping.validator_name, mapping.validator_ref)
+        lines.append(f"   {ref}")
 
 
 def _add_field_summary(
@@ -291,11 +353,15 @@ def _add_validator_summary(
         app.config, "sphinxcontrib_pydantic_validator_list_fields", True
     )
 
+    # Build model path for cross-references
+    model_path = f"{model.__module__}.{model.__name__}"
+
     try:
         validators = [get_validator_info(model, name) for name in validator_names]
         summary_lines = generate_validator_summary_table(
             validators,
             list_fields=list_fields,
+            model_path=model_path,
         )
         if summary_lines:
             lines.append("")

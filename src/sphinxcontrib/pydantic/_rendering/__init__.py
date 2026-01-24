@@ -8,3 +8,4 @@ from sphinxcontrib.pydantic._rendering._summary import (
     generate_field_summary_table,
     generate_validator_summary_table,
 )
+from sphinxcontrib.pydantic._rendering._xref import create_role_reference

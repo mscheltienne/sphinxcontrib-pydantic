@@ -43,7 +43,8 @@ class TestPydanticModelDirective:
         """Directive has inherited-members option."""
         spec = PydanticModelDirective.option_spec
         assert "inherited-members" in spec
-        assert spec["inherited-members"] == flag_or_value
+        # Uses unchanged to accept exclude list like autodoc's inherited-members
+        assert spec["inherited-members"] == directives.unchanged
 
     def test_has_undoc_members_option(self) -> None:
         """Directive has undoc-members option."""

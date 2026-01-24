@@ -11,6 +11,14 @@ from sphinxcontrib.pydantic._inspection._model import (
     is_pydantic_model,
     is_pydantic_settings,
 )
+from sphinxcontrib.pydantic._inspection._references import (
+    ASTERISK_FIELD_NAME,
+    ValidatorFieldMap,
+    filter_mappings_by_field,
+    filter_mappings_by_validator,
+    get_validator_field_mappings,
+    resolve_inherited_validator_reference,
+)
 from sphinxcontrib.pydantic._inspection._validator import (
     ValidatorInfo,
     get_validator_info,
