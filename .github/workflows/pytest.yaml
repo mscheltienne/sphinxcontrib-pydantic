@@ -40,3 +40,30 @@ jobs:
         if: ${{ github.repository == 'mscheltienne/sphinxcontrib-pydantic' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  pytest-pip-pre:
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+    name: pip pre-release - py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          activate-environment: true
+          python-version: ${{ matrix.python-version }}
+      - name: Install package
+        run: |
+          uv sync -q --no-default-groups --group test
+          uv pip install -q --upgrade --prerelease allow git+https://github.com/pydantic/pydantic
+          uv pip install -q --upgrade --prerelease allow git+https://github.com/sphinx-doc/sphinx
+      - run: pytest tests --cov=template --cov-report=xml --cov-config=pyproject.toml
+      - uses: codecov/codecov-action@v5
+        if: ${{ github.repository == 'mscheltienne/sphinxcontrib-pydantic' }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
