@@ -10,7 +10,6 @@ from sphinxcontrib.pydantic._inspection import (
     filter_mappings_by_field,
     filter_mappings_by_validator,
     get_validator_field_mappings,
-    resolve_inherited_validator_reference,
 )
 
 
@@ -168,57 +167,6 @@ class TestFilterMappingsByField:
         filtered = filter_mappings_by_field(mappings, "nonexistent")
 
         assert filtered == []
-
-
-class TestResolveInheritedValidatorReference:
-    """Tests for resolve_inherited_validator_reference function."""
-
-    def test_no_change_without_inherited_members(self) -> None:
-        """Test that reference is unchanged when inherited_members is None."""
-        from tests.assets.models.inheritance import ChildModelSimple
-
-        ref = "tests.assets.models.inheritance.BaseModelWithValidator.validate_base_field"
-        resolved = resolve_inherited_validator_reference(
-            ChildModelSimple, ref, inherited_members=None
-        )
-
-        assert resolved == ref
-
-    def test_no_change_for_own_validator(self) -> None:
-        """Test that reference to model's own validator is unchanged."""
-        from tests.assets.models.inheritance import ChildModelWithOwnValidator
-
-        ref = "tests.assets.models.inheritance.ChildModelWithOwnValidator.validate_child_field"
-        resolved = resolve_inherited_validator_reference(
-            ChildModelWithOwnValidator, ref, inherited_members={"BaseModelWithValidator"}
-        )
-
-        assert resolved == ref
-
-    def test_rewrites_inherited_validator_reference(self) -> None:
-        """Test that inherited validator reference is rewritten."""
-        from tests.assets.models.inheritance import ChildModelSimple
-
-        ref = "tests.assets.models.inheritance.BaseModelWithValidator.validate_base_field"
-        resolved = resolve_inherited_validator_reference(
-            ChildModelSimple, ref, inherited_members={"BaseModelWithValidator"}
-        )
-
-        assert "ChildModelSimple" in resolved
-        assert "BaseModelWithValidator" not in resolved
-        assert resolved.endswith(".ChildModelSimple.validate_base_field")
-
-    def test_no_change_when_base_not_in_inherited_members(self) -> None:
-        """Test that reference is unchanged when base class not in inherited_members."""
-        from tests.assets.models.inheritance import ChildModelSimple
-
-        ref = "tests.assets.models.inheritance.BaseModelWithValidator.validate_base_field"
-        resolved = resolve_inherited_validator_reference(
-            ChildModelSimple, ref, inherited_members={"OtherClass"}
-        )
-
-        # Should be unchanged since BaseModelWithValidator not in set
-        assert resolved == ref
 
 
 class TestInheritanceScenarios:

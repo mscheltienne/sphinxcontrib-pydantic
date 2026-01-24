@@ -97,7 +97,7 @@ class TestInheritanceDocumentation:
             "Test Project\n"
             "============\n"
             "\n"
-            ".. autoclass:: tests.assets.models.inheritance.ChildModelWithOwnValidator\n"
+            ".. autoclass:: tests.assets.models.inheritance.ChildModelWithOwnValidator\n"  # noqa: E501
             "   :members:\n"
         )
 
@@ -171,7 +171,7 @@ class TestInheritedModelValidators:
             "Test Project\n"
             "============\n"
             "\n"
-            ".. autoclass:: tests.assets.models.inheritance.ChildWithInheritedModelValidator\n"
+            ".. autoclass:: tests.assets.models.inheritance.ChildWithInheritedModelValidator\n"  # noqa: E501
             "   :members:\n"
         )
 

@@ -43,8 +43,8 @@ NodeB.model_rebuild()
 class StringAnnotationModel(BaseModel):
     """Model using string annotations throughout."""
 
-    related: "StringAnnotationModel | None" = None
-    items: "list[str]" = []
+    related: StringAnnotationModel | None = None
+    items: list[str] = []
 
     @field_validator("items")
     @classmethod

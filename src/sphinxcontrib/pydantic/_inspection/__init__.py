@@ -17,7 +17,6 @@ from sphinxcontrib.pydantic._inspection._references import (
     filter_mappings_by_field,
     filter_mappings_by_validator,
     get_validator_field_mappings,
-    resolve_inherited_validator_reference,
 )
 from sphinxcontrib.pydantic._inspection._validator import (
     ValidatorInfo,

@@ -115,8 +115,8 @@ def get_field_info(model: type[BaseModel], field_name: str) -> FieldInfo:
     # Check for default_factory
     has_default_factory = pydantic_field.default_factory is not None
 
-    # Determine if required
-    is_required = not has_default and not has_default_factory
+    # Use Pydantic's built-in is_required check
+    is_required = pydantic_field.is_required()
 
     # Get alias
     alias = pydantic_field.alias

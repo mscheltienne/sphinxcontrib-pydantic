@@ -46,22 +46,3 @@ def register_config(app: Sphinx) -> None:
     """
     for name, default, rebuild in _CONFIG_OPTIONS:
         app.add_config_value(name, default, rebuild)
-
-
-def get_config_value(app: Sphinx, name: str) -> object:
-    """Get a configuration value.
-
-    Parameters
-    ----------
-    app : Sphinx
-        The Sphinx application instance.
-    name : str
-        The configuration option name (without prefix).
-
-    Returns
-    -------
-    object
-        The configuration value.
-    """
-    full_name = f"sphinxcontrib_pydantic_{name}"
-    return getattr(app.config, full_name)

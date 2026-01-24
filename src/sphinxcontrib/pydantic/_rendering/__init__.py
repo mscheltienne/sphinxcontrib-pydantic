@@ -5,7 +5,7 @@ from sphinxcontrib.pydantic._rendering._rst import (
     format_type_annotation,
 )
 from sphinxcontrib.pydantic._rendering._summary import (
+    create_role_reference,
     generate_field_summary_table,
     generate_validator_summary_table,
 )
-from sphinxcontrib.pydantic._rendering._xref import create_role_reference
