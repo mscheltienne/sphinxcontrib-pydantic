@@ -184,8 +184,8 @@ class TestGenerateFieldSummaryTable:
         # Alias column should not appear when no fields have aliases
         assert "Alias" not in table_content
 
-    def test_field_order_preserved_in_table(self) -> None:
-        """Test that fields appear in the same order as provided."""
+    def test_fields_sorted_alphabetically_in_table(self) -> None:
+        """Test that fields are sorted alphabetically by name."""
         fields = [
             get_field_info(SimpleModel, "name"),
             get_field_info(SimpleModel, "count"),
@@ -195,7 +195,7 @@ class TestGenerateFieldSummaryTable:
 
         name_pos = table_content.find("``name``")
         count_pos = table_content.find("``count``")
-        assert name_pos < count_pos  # name should appear before count
+        assert count_pos < name_pos  # count should appear before name (alphabetical)
 
 
 class TestGenerateRootTypeLine:
