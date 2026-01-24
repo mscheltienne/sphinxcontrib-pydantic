@@ -57,8 +57,43 @@ numpydoc_class_members_toctree = False
 numpydoc_attributes_as_param_list = False
 numpydoc_xref_param_type = True
 
+# Disable inherited class members for Pydantic models to avoid broken cross-references
+# to inherited BaseModel methods (model_dump, model_validate, etc.)
+numpydoc_show_inherited_class_members = {
+    # models.base
+    "example_advanced.models.base.BaseEntity": False,
+    "example_advanced.models.base.NamedEntity": False,
+    "example_advanced.models.base.AuditableEntity": False,
+    # models.config
+    "example_advanced.models.config.DatabaseConfig": False,
+    "example_advanced.models.config.CacheConfig": False,
+    "example_advanced.models.config.AppConfig": False,
+    # models.validators
+    "example_advanced.models.validators.PasswordReset": False,
+    "example_advanced.models.validators.DataProcessor": False,
+    "example_advanced.models.validators.BoundedValue": False,
+    # models.computed
+    "example_advanced.models.computed.Rectangle": False,
+    "example_advanced.models.computed.Person": False,
+    # generics
+    "example_advanced.generics.Response": False,
+    "example_advanced.generics.PaginatedResponse": False,
+    "example_advanced.generics.KeyValueStore": False,
+    # settings
+    "example_advanced.settings.AppSettings": False,
+    "example_advanced.settings.DatabaseSettings": False,
+    # database.dto
+    "example_advanced.database.dto.ProjectBase": False,
+    "example_advanced.database.dto.ProjectCreate": False,
+    "example_advanced.database.dto.ProjectRead": False,
+    "example_advanced.database.dto.ProjectUpdate": False,
+    # database.table
+    "example_advanced.database.table.User": False,
+    "example_advanced.database.table.Project": False,
+}
+
 # Intersphinx
-intersphinx_mapping = get_intersphinx_mapping(packages={"python"})
+intersphinx_mapping = get_intersphinx_mapping(packages={"python", "sqlalchemy"})
 intersphinx_mapping.update(
     {
         "pydantic": ("https://docs.pydantic.dev/latest/", None),

@@ -13,10 +13,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppSettings(BaseSettings):
     """Application settings loaded from environment.
 
-    These settings are loaded from environment variables with the prefix 'APP_'.
+    These settings are loaded from environment variables with the prefix ``APP_``.
 
-    Example
-    -------
+    Examples
+    --------
     Set environment variables::
 
         export APP_NAME="MyApp"
@@ -38,10 +38,10 @@ class DatabaseSettings(BaseSettings):
     """Database settings from environment.
 
     Settings for database connection loaded from environment variables
-    with the prefix 'DB_'.
+    with the prefix ``DB_``.
 
-    Example
-    -------
+    Examples
+    --------
     Set environment variables::
 
         export DB_HOST="localhost"
