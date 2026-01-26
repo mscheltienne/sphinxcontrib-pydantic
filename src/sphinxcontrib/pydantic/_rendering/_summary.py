@@ -42,6 +42,7 @@ def create_role_reference(name: str, target: str, role: str = "py:obj") -> str:
 
 def generate_field_summary_table(
     fields: list[FieldInfo],
+    model_path: str,
     *,
     show_alias: bool = True,
     show_default: bool = True,
@@ -54,6 +55,9 @@ def generate_field_summary_table(
     ----------
     fields : list[FieldInfo]
         The fields to include in the summary.
+    model_path : str
+        The fully qualified model path (e.g., "module.Class").
+        Used to generate cross-references for field names.
     show_alias : bool
         Whether to show field aliases.
     show_default : bool
@@ -100,7 +104,7 @@ def generate_field_summary_table(
 
     # Data rows
     for field in fields:
-        row_data = _get_field_row_data(field, columns)
+        row_data = _get_field_row_data(field, columns, model_path)
         lines.append("   * - " + row_data[0])
         lines.extend("     - " + cell for cell in row_data[1:])
 
@@ -108,7 +112,11 @@ def generate_field_summary_table(
     return lines
 
 
-def _get_field_row_data(field: FieldInfo, columns: list[str]) -> list[str]:
+def _get_field_row_data(
+    field: FieldInfo,
+    columns: list[str],
+    model_path: str,
+) -> list[str]:
     """Get the data for a single field row.
 
     Parameters
@@ -117,6 +125,8 @@ def _get_field_row_data(field: FieldInfo, columns: list[str]) -> list[str]:
         The field information.
     columns : list[str]
         The columns to include.
+    model_path : str
+        The fully qualified model path for cross-references.
 
     Returns
     -------
@@ -127,10 +137,10 @@ def _get_field_row_data(field: FieldInfo, columns: list[str]) -> list[str]:
 
     for col in columns:
         if col == "Field":
-            row.append(f"``{field.name}``")
+            ref = f"{model_path}.{field.name}"
+            row.append(create_role_reference(field.name, ref))
         elif col == "Type":
-            type_str = format_type_annotation(field.annotation)
-            row.append(f"``{type_str}``")
+            row.append(format_type_annotation(field.annotation, as_rst=True))
         elif col == "Required":
             row.append("Yes" if field.is_required else "No")
         elif col == "Default":
@@ -189,19 +199,19 @@ def generate_root_type_line(root_field: FieldInfo) -> list[str]:
     list[str]
         RST lines showing the root type.
     """
-    type_str = format_type_annotation(root_field.annotation)
+    type_rst = format_type_annotation(root_field.annotation, as_rst=True)
     lines: list[str] = []
     lines.append("")
-    lines.append(f"**Root Type:** ``{type_str}``")
+    lines.append(f"**Root Type:** {type_rst}")
     lines.append("")
     return lines
 
 
 def generate_validator_summary_table(
     validators: list[ValidatorInfo],
+    model_path: str,
     *,
     list_fields: bool = True,
-    model_path: str | None = None,
 ) -> list[str]:
     """Generate a validator summary table in RST format.
 
@@ -209,11 +219,11 @@ def generate_validator_summary_table(
     ----------
     validators : list[ValidatorInfo]
         The validators to include in the summary.
+    model_path : str
+        The fully qualified model path (e.g., "module.Class").
+        Used to generate cross-references for validators and fields.
     list_fields : bool
         Whether to list validated fields.
-    model_path : str | None
-        The fully qualified model path (e.g., "module.Class"). If provided,
-        cross-references will be generated for validators and fields.
 
     Returns
     -------
@@ -257,7 +267,7 @@ def generate_validator_summary_table(
 def _get_validator_row_data(
     validator: ValidatorInfo,
     columns: list[str],
-    model_path: str | None = None,
+    model_path: str,
 ) -> list[str]:
     """Get the data for a single validator row.
 
@@ -267,8 +277,8 @@ def _get_validator_row_data(
         The validator information.
     columns : list[str]
         The columns to include.
-    model_path : str | None
-        The fully qualified model path for cross-references (used as fallback).
+    model_path : str
+        The fully qualified model path for cross-references.
 
     Returns
     -------
@@ -279,34 +289,25 @@ def _get_validator_row_data(
 
     for col in columns:
         if col == "Validator":
-            if model_path:
-                # Use the defining class path for the validator cross-reference
-                ref = f"{validator.defining_class_path}.{validator.name}"
-                row.append(create_role_reference(validator.name, ref))
-            else:
-                row.append(f"``{validator.name}``")
+            # Use the defining class path for the validator cross-reference
+            ref = f"{validator.defining_class_path}.{validator.name}"
+            row.append(create_role_reference(validator.name, ref))
         elif col == "Mode":
             row.append(validator.mode)
         elif col == "Fields":
             if validator.is_model_validator:
                 row.append("*model*")
             elif validator.fields:
-                if model_path:
-                    # Use the defining class path for each field cross-reference
-                    field_refs = []
-                    for f in validator.fields:
-                        if f == "*":
-                            field_refs.append("``*``")
-                        else:
-                            # Get the class where this field was defined
-                            field_path = validator.field_class_paths.get(f, model_path)
-                            field_refs.append(
-                                create_role_reference(f, f"{field_path}.{f}")
-                            )
-                    row.append(", ".join(field_refs))
-                else:
-                    fields_str = ", ".join(f"``{f}``" for f in validator.fields)
-                    row.append(fields_str)
+                # Use the defining class path for each field cross-reference
+                field_refs = []
+                for f in validator.fields:
+                    if f == "*":
+                        field_refs.append("``*``")
+                    else:
+                        # Get the class where this field was defined
+                        field_path = validator.field_class_paths.get(f, model_path)
+                        field_refs.append(create_role_reference(f, f"{field_path}.{f}"))
+                row.append(", ".join(field_refs))
             else:
                 row.append("")
 

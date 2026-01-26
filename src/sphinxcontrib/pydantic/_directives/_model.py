@@ -188,6 +188,9 @@ class PydanticModelDirective(PydanticDirective):
         if model_info.docstring:
             self._parse_docstring(model_info.docstring, content)
 
+        # Compute model path for cross-references
+        model_path = f"{model_info.module}.{model_info.name}"
+
         # Add field summary table
         show_field_summary = self.get_option_or_config(
             "show-field-summary",
@@ -196,7 +199,7 @@ class PydanticModelDirective(PydanticDirective):
         )
         if show_field_summary and model_info.field_names:
             fields = [get_field_info(model, name) for name in model_info.field_names]
-            self._add_field_summary(fields, content)
+            self._add_field_summary(fields, model_path, content)
 
         # Add validator summary table
         show_validator_summary = self.get_option_or_config(
@@ -209,7 +212,7 @@ class PydanticModelDirective(PydanticDirective):
         )
         if show_validator_summary and validators:
             validator_infos = [get_validator_info(model, name) for name in validators]
-            self._add_validator_summary(validator_infos, content)
+            self._add_validator_summary(validator_infos, model_path, content)
 
         # Add JSON schema if requested
         show_json = self.get_option_or_config(
@@ -247,6 +250,7 @@ class PydanticModelDirective(PydanticDirective):
     def _add_field_summary(
         self,
         fields: list[FieldInfo],
+        model_path: str,
         parent: nodes.Element,
     ) -> None:
         """Add a field summary table to the parent node.
@@ -255,6 +259,8 @@ class PydanticModelDirective(PydanticDirective):
         ----------
         fields : list[FieldInfo]
             The fields to summarize.
+        model_path : str
+            The fully qualified path to the model (e.g., ``module.ClassName``).
         parent : nodes.Element
             The parent node to add content to.
         """
@@ -281,6 +287,7 @@ class PydanticModelDirective(PydanticDirective):
 
         lines = generate_field_summary_table(
             fields,
+            model_path,
             show_alias=show_alias,
             show_default=show_default,
             show_required=show_required,
@@ -294,6 +301,7 @@ class PydanticModelDirective(PydanticDirective):
     def _add_validator_summary(
         self,
         validators: list[ValidatorInfo],
+        model_path: str,
         parent: nodes.Element,
     ) -> None:
         """Add a validator summary table to the parent node.
@@ -302,6 +310,8 @@ class PydanticModelDirective(PydanticDirective):
         ----------
         validators : list[ValidatorInfo]
             The validators to summarize.
+        model_path : str
+            The fully qualified path to the model (e.g., ``module.ClassName``).
         parent : nodes.Element
             The parent node to add content to.
         """
@@ -313,6 +323,7 @@ class PydanticModelDirective(PydanticDirective):
 
         lines = generate_validator_summary_table(
             validators,
+            model_path,
             list_fields=list_fields,
         )
 

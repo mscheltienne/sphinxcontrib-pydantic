@@ -21,6 +21,10 @@ from sphinxcontrib.pydantic._rendering import (
     generate_root_type_line,
     generate_validator_summary_table,
 )
+from sphinxcontrib.pydantic._rendering._rst import (
+    format_default_value,
+    format_type_annotation,
+)
 
 if TYPE_CHECKING:
     from typing import Any
@@ -276,6 +280,17 @@ def _process_class_docstring(
     if show_validator_summary and validators:
         _add_validator_summary(obj, model_info, validators, app, lines)
 
+    # Add detailed field documentation if configured
+    show_field_doc = getattr(
+        app.config, "sphinxcontrib_pydantic_model_show_field_doc", True
+    )
+    # Skip for RootModel (already displayed as "Root Type")
+    is_root = model_info.is_root_model and len(model_info.field_names) == 1
+    if show_field_doc and model_info.field_names and not is_root:
+        field_doc_lines = _generate_field_documentation(obj, model_info, app)
+        if field_doc_lines:
+            lines.extend(field_doc_lines)
+
 
 def _process_attribute_docstring(
     app: Sphinx,
@@ -347,6 +362,9 @@ def _add_field_summary(
     lines : list[str]
         The docstring lines to modify.
     """
+    # Build model path for cross-references
+    model_path = f"{model.__module__}.{model.__name__}"
+
     try:
         fields = [get_field_info(model, name) for name in model_info.field_names]
 
@@ -369,6 +387,7 @@ def _add_field_summary(
             )
             summary_lines = generate_field_summary_table(
                 fields,
+                model_path,
                 show_alias=show_alias,
                 show_default=show_default,
                 show_required=show_required,
@@ -415,14 +434,97 @@ def _add_validator_summary(
         validators = [get_validator_info(model, name) for name in validator_names]
         summary_lines = generate_validator_summary_table(
             validators,
+            model_path,
             list_fields=list_fields,
-            model_path=model_path,
         )
         if summary_lines:
             lines.append("")
             lines.extend(summary_lines)
     except Exception as e:
         _logger.warning("Failed to generate validator summary: %s", e)
+
+
+def _generate_field_documentation(
+    model: type,
+    model_info: Any,
+    app: Sphinx,
+) -> list[str]:
+    """Generate detailed field documentation for a Pydantic model.
+
+    Generates RST directives for each field with description,
+    constraints, and validators.
+
+    Parameters
+    ----------
+    model : type
+        The Pydantic model class.
+    model_info : ModelInfo
+        Information about the model.
+    app : Sphinx
+        The Sphinx application.
+
+    Returns
+    -------
+    list[str]
+        RST lines for detailed field documentation.
+    """
+    lines: list[str] = []
+
+    # Get validator mappings
+    mappings = get_validator_field_mappings(model)
+
+    for field_name in model_info.field_names:
+        try:
+            field = get_field_info(model, field_name)
+        except Exception:
+            continue
+
+        # Generate field directive
+        lines.append("")
+        lines.append(f".. py:pydantic_field:: {field_name}")
+
+        if field.is_required:
+            lines.append("   :required:")
+        else:
+            lines.append("   :optional:")
+
+        # Add type annotation
+        type_str = format_type_annotation(field.annotation)
+        lines.append(f"   :type: {type_str}")
+
+        # Add default value
+        if field.has_default:
+            default_str = format_default_value(field.default)
+            lines.append(f"   :value: {default_str}")
+        elif field.has_default_factory:
+            lines.append("   :value: *factory*")
+
+        lines.append("")
+
+        # Add field description
+        if field.description:
+            lines.append(f"   {field.description}")
+            lines.append("")
+
+        # Add constraints
+        if field.constraints:
+            lines.append("   :Constraints:")
+            for key, value in field.constraints.items():
+                lines.append(f"      - **{key}** = {value}")
+            lines.append("")
+
+        # Add validators
+        field_mappings = filter_mappings_by_field(mappings, field_name)
+        if field_mappings:
+            lines.append("   :Validated by:")
+            for mapping in sorted(field_mappings, key=lambda m: m.validator_name):
+                ref = create_role_reference(
+                    mapping.validator_name, mapping.validator_ref
+                )
+                lines.append(f"      {ref}")
+            lines.append("")
+
+    return lines
 
 
 def autodoc_process_signature(

@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 from sphinxcontrib.pydantic._autodoc._handlers import (
     _PYDANTIC_BASE_CLASSES,
     PYDANTIC_SKIP_MEMBERS,
+    _generate_field_documentation,
     is_pydantic_base_member,
     is_pydantic_internal,
     should_skip_member,
 )
+from sphinxcontrib.pydantic._inspection import get_model_info
 from tests.assets.models.basic import SimpleModel
+from tests.assets.models.fields import (
+    FieldWithConstraints,
+    FieldWithDefaults,
+    FieldWithMetadata,
+)
 from tests.assets.models.sqlmodel_models import HeroCreate
 from tests.assets.models.validators import SingleFieldValidator
 
@@ -242,3 +251,125 @@ class TestPydanticSkipMembers:
             "__pydantic_fields__",
         }
         assert expected_members <= PYDANTIC_SKIP_MEMBERS
+
+
+class TestGenerateFieldDocumentation:
+    """Tests for _generate_field_documentation function."""
+
+    def test_generates_field_directive_for_each_field(self) -> None:
+        """Test that a field directive is generated for each model field."""
+        model_info = get_model_info(SimpleModel)
+        app = MagicMock()
+
+        result = _generate_field_documentation(SimpleModel, model_info, app)
+
+        content = "\n".join(result)
+        # Should have field directives for both fields
+        assert ".. py:pydantic_field:: name" in content
+        assert ".. py:pydantic_field:: count" in content
+
+    def test_includes_required_option_for_required_fields(self) -> None:
+        """Test that required fields have :required: option."""
+        model_info = get_model_info(FieldWithDefaults)
+        app = MagicMock()
+
+        result = _generate_field_documentation(FieldWithDefaults, model_info, app)
+
+        content = "\n".join(result)
+        # required_field should have :required:
+        assert ".. py:pydantic_field:: required_field" in content
+        assert ":required:" in content
+
+    def test_includes_optional_option_for_optional_fields(self) -> None:
+        """Test that optional fields have :optional: option."""
+        model_info = get_model_info(FieldWithDefaults)
+        app = MagicMock()
+
+        result = _generate_field_documentation(FieldWithDefaults, model_info, app)
+
+        content = "\n".join(result)
+        # optional_field should have :optional:
+        assert ".. py:pydantic_field:: optional_field" in content
+        assert ":optional:" in content
+
+    def test_includes_type_annotation(self) -> None:
+        """Test that type annotation is included."""
+        model_info = get_model_info(SimpleModel)
+        app = MagicMock()
+
+        result = _generate_field_documentation(SimpleModel, model_info, app)
+
+        content = "\n".join(result)
+        assert ":type: str" in content
+        assert ":type: int" in content
+
+    def test_includes_default_value(self) -> None:
+        """Test that default values are included."""
+        model_info = get_model_info(FieldWithDefaults)
+        app = MagicMock()
+
+        result = _generate_field_documentation(FieldWithDefaults, model_info, app)
+
+        content = "\n".join(result)
+        # default_value has default of 42
+        assert ":value: 42" in content
+
+    def test_includes_factory_default(self) -> None:
+        """Test that factory defaults are indicated."""
+        model_info = get_model_info(FieldWithDefaults)
+        app = MagicMock()
+
+        result = _generate_field_documentation(FieldWithDefaults, model_info, app)
+
+        content = "\n".join(result)
+        # factory_default uses default_factory
+        assert ":value: *factory*" in content
+
+    def test_includes_field_description(self) -> None:
+        """Test that field description is included."""
+        model_info = get_model_info(FieldWithMetadata)
+        app = MagicMock()
+
+        result = _generate_field_documentation(FieldWithMetadata, model_info, app)
+
+        content = "\n".join(result)
+        assert "A documented field." in content
+
+    def test_includes_constraints(self) -> None:
+        """Test that constraints are included."""
+        model_info = get_model_info(FieldWithConstraints)
+        app = MagicMock()
+
+        result = _generate_field_documentation(FieldWithConstraints, model_info, app)
+
+        content = "\n".join(result)
+        # bounded field has ge=0, le=100
+        assert ":Constraints:" in content
+        assert "**ge** = 0" in content
+        assert "**le** = 100" in content
+
+    def test_includes_validators(self) -> None:
+        """Test that validators are referenced."""
+        model_info = get_model_info(SingleFieldValidator)
+        app = MagicMock()
+
+        result = _generate_field_documentation(SingleFieldValidator, model_info, app)
+
+        content = "\n".join(result)
+        # value field is validated by check_positive
+        assert ":Validated by:" in content
+        assert "check_positive" in content
+
+    def test_returns_empty_for_no_fields(self) -> None:
+        """Test that empty list is returned for model with no fields."""
+        from pydantic import BaseModel
+
+        class EmptyModel(BaseModel):
+            pass
+
+        model_info = get_model_info(EmptyModel)
+        app = MagicMock()
+
+        result = _generate_field_documentation(EmptyModel, model_info, app)
+
+        assert result == []

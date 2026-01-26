@@ -100,6 +100,87 @@ class TestFormatTypeAnnotation:
         assert result == "tuple[int, ...]"
 
 
+class TestFormatTypeAnnotationAsRst:
+    """Tests for format_type_annotation with as_rst=True."""
+
+    def test_formats_builtin_types_as_rst(self) -> None:
+        """Test that builtin types become RST cross-references."""
+        assert format_type_annotation(str, as_rst=True) == ":py:class:`str`"
+        assert format_type_annotation(int, as_rst=True) == ":py:class:`int`"
+        assert format_type_annotation(float, as_rst=True) == ":py:class:`float`"
+        assert format_type_annotation(bool, as_rst=True) == ":py:class:`bool`"
+
+    def test_formats_none_as_rst(self) -> None:
+        """Test that None becomes RST py:obj reference."""
+        assert format_type_annotation(None, as_rst=True) == ":py:obj:`None`"
+
+    def test_formats_none_type_as_rst(self) -> None:
+        """Test that type(None) becomes RST reference."""
+        result = format_type_annotation(type(None), as_rst=True)
+        assert ":py:obj:`None`" in result
+
+    def test_formats_optional_type_as_rst(self) -> None:
+        """Test that Optional types become RST with cross-references."""
+        from typing import Optional
+
+        result = format_type_annotation(Optional[str], as_rst=True)  # noqa: UP045
+        assert ":py:class:`str`" in result
+        assert ":py:obj:`None`" in result
+        assert "|" in result  # Union separator
+
+    def test_formats_union_type_as_rst(self) -> None:
+        """Test that Union types become RST with cross-references."""
+        result = format_type_annotation(Union[str, int], as_rst=True)  # noqa: UP007
+        assert ":py:class:`str`" in result
+        assert ":py:class:`int`" in result
+        assert "|" in result  # Union separator
+
+    def test_formats_list_type_as_rst(self) -> None:
+        """Test that list types become RST with cross-references."""
+        result = format_type_annotation(list[str], as_rst=True)
+        assert ":py:class:`list`" in result
+        assert ":py:class:`str`" in result
+
+    def test_formats_dict_type_as_rst(self) -> None:
+        """Test that dict types become RST with cross-references."""
+        result = format_type_annotation(dict[str, int], as_rst=True)
+        assert ":py:class:`dict`" in result
+        assert ":py:class:`str`" in result
+        assert ":py:class:`int`" in result
+
+    def test_formats_nested_types_as_rst(self) -> None:
+        """Test that nested generic types become RST with cross-references."""
+        result = format_type_annotation(list[dict[str, int]], as_rst=True)
+        assert ":py:class:`list`" in result
+        assert ":py:class:`dict`" in result
+        assert ":py:class:`str`" in result
+        assert ":py:class:`int`" in result
+
+    def test_formats_pathlib_path_as_rst(self) -> None:
+        """Test that pathlib.Path becomes RST cross-reference with module."""
+        from pathlib import Path
+
+        result = format_type_annotation(Path, as_rst=True)
+        assert ":py:class:`~pathlib.Path`" in result
+
+    def test_formats_optional_path_as_rst(self) -> None:
+        """Test that Optional[Path] becomes RST with cross-references."""
+        from pathlib import Path
+        from typing import Optional
+
+        result = format_type_annotation(Optional[Path], as_rst=True)  # noqa: UP045
+        assert ":py:class:`~pathlib.Path`" in result
+        assert ":py:obj:`None`" in result
+
+    def test_as_rst_false_returns_plain_text(self) -> None:
+        """Test that as_rst=False (default) returns plain text."""
+        # Default should be plain text
+        assert format_type_annotation(str) == "str"
+        assert format_type_annotation(str, as_rst=False) == "str"
+        # Explicit as_rst=True should give RST
+        assert format_type_annotation(str, as_rst=True) == ":py:class:`str`"
+
+
 class TestFormatDefaultValue:
     """Tests for format_default_value function."""
 

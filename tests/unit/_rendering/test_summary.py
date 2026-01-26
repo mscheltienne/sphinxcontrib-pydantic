@@ -19,6 +19,15 @@ from tests.assets.models.validators import (
     SingleFieldValidator,
 )
 
+# Model paths used for cross-references in tests
+SIMPLE_MODEL_PATH = "tests.assets.models.basic.SimpleModel"
+FIELD_WITH_ALIAS_PATH = "tests.assets.models.fields.FieldWithAlias"
+FIELD_WITH_CONSTRAINTS_PATH = "tests.assets.models.fields.FieldWithConstraints"
+SINGLE_FIELD_VALIDATOR_PATH = "tests.assets.models.validators.SingleFieldValidator"
+MULTI_FIELD_VALIDATOR_PATH = "tests.assets.models.validators.MultiFieldValidator"
+BEFORE_VALIDATOR_PATH = "tests.assets.models.validators.BeforeValidator"
+MODEL_VALIDATOR_AFTER_PATH = "tests.assets.models.validators.ModelValidatorAfter"
+
 
 class TestCreateRoleReference:
     """Tests for create_role_reference function."""
@@ -76,7 +85,7 @@ class TestGenerateFieldSummaryTable:
             get_field_info(SimpleModel, "count"),
         ]
 
-        result = generate_field_summary_table(fields)
+        result = generate_field_summary_table(fields, SIMPLE_MODEL_PATH)
 
         # Check that result is a list of lines
         assert isinstance(result, list)
@@ -90,31 +99,36 @@ class TestGenerateFieldSummaryTable:
         # Should have header row + 2 data rows
         assert len(data_rows) == 3  # 1 header + 2 fields
 
-    def test_includes_field_names(self) -> None:
-        """Test that field names are included in the table."""
+    def test_includes_field_names_as_cross_references(self) -> None:
+        """Test that field names are cross-references in the table."""
         fields = [
             get_field_info(SimpleModel, "name"),
             get_field_info(SimpleModel, "count"),
         ]
 
-        result = generate_field_summary_table(fields)
+        result = generate_field_summary_table(fields, SIMPLE_MODEL_PATH)
         table_content = "\n".join(result)
 
-        assert "``name``" in table_content
-        assert "``count``" in table_content
+        # Field names should be cross-references
+        assert f":py:obj:`name <{SIMPLE_MODEL_PATH}.name>`" in table_content
+        assert f":py:obj:`count <{SIMPLE_MODEL_PATH}.count>`" in table_content
 
-    def test_includes_field_types(self) -> None:
-        """Test that field types are included in the table."""
+    def test_includes_field_types_as_rst_references(self) -> None:
+        """Test that field types are RST cross-references in the table."""
         fields = [
             get_field_info(SimpleModel, "name"),
             get_field_info(SimpleModel, "count"),
         ]
 
-        result = generate_field_summary_table(fields)
+        result = generate_field_summary_table(fields, SIMPLE_MODEL_PATH)
         table_content = "\n".join(result)
 
-        assert "``str``" in table_content
-        assert "``int``" in table_content
+        # Types should be RST cross-references, not backtick-wrapped
+        assert ":py:class:`str`" in table_content
+        assert ":py:class:`int`" in table_content
+        # Should NOT have backtick-wrapped types
+        assert "``str``" not in table_content
+        assert "``int``" not in table_content
 
     def test_includes_required_indicator(self) -> None:
         """Test that required indicator is included."""
@@ -123,7 +137,9 @@ class TestGenerateFieldSummaryTable:
             get_field_info(SimpleModel, "count"),
         ]
 
-        result = generate_field_summary_table(fields, show_required=True)
+        result = generate_field_summary_table(
+            fields, SIMPLE_MODEL_PATH, show_required=True
+        )
         table_content = "\n".join(result)
 
         assert "Required" in table_content
@@ -136,7 +152,9 @@ class TestGenerateFieldSummaryTable:
             get_field_info(SimpleModel, "count"),
         ]
 
-        result = generate_field_summary_table(fields, show_default=True)
+        result = generate_field_summary_table(
+            fields, SIMPLE_MODEL_PATH, show_default=True
+        )
         table_content = "\n".join(result)
 
         assert "``0``" in table_content
@@ -147,7 +165,9 @@ class TestGenerateFieldSummaryTable:
             get_field_info(FieldWithAlias, "internal_name"),
         ]
 
-        result = generate_field_summary_table(fields, show_alias=True)
+        result = generate_field_summary_table(
+            fields, FIELD_WITH_ALIAS_PATH, show_alias=True
+        )
         table_content = "\n".join(result)
 
         assert "Alias" in table_content
@@ -159,7 +179,9 @@ class TestGenerateFieldSummaryTable:
             get_field_info(FieldWithConstraints, "bounded"),
         ]
 
-        result = generate_field_summary_table(fields, show_constraints=True)
+        result = generate_field_summary_table(
+            fields, FIELD_WITH_CONSTRAINTS_PATH, show_constraints=True
+        )
         table_content = "\n".join(result)
 
         assert "Constraints" in table_content
@@ -168,7 +190,7 @@ class TestGenerateFieldSummaryTable:
 
     def test_returns_empty_for_no_fields(self) -> None:
         """Test that empty list is returned for no fields."""
-        result = generate_field_summary_table([])
+        result = generate_field_summary_table([], SIMPLE_MODEL_PATH)
         assert result == []
 
     def test_hides_alias_column_when_no_aliases(self) -> None:
@@ -178,7 +200,9 @@ class TestGenerateFieldSummaryTable:
             get_field_info(SimpleModel, "count"),
         ]
 
-        result = generate_field_summary_table(fields, show_alias=True)
+        result = generate_field_summary_table(
+            fields, SIMPLE_MODEL_PATH, show_alias=True
+        )
         table_content = "\n".join(result)
 
         # Alias column should not appear when no fields have aliases
@@ -190,11 +214,12 @@ class TestGenerateFieldSummaryTable:
             get_field_info(SimpleModel, "name"),
             get_field_info(SimpleModel, "count"),
         ]
-        result = generate_field_summary_table(fields)
+        result = generate_field_summary_table(fields, SIMPLE_MODEL_PATH)
         table_content = "\n".join(result)
 
-        name_pos = table_content.find("``name``")
-        count_pos = table_content.find("``count``")
+        # Find positions of field cross-references
+        name_pos = table_content.find(f":py:obj:`name <{SIMPLE_MODEL_PATH}.name>`")
+        count_pos = table_content.find(f":py:obj:`count <{SIMPLE_MODEL_PATH}.count>`")
         assert count_pos < name_pos  # count should appear before name (alphabetical)
 
 
@@ -212,7 +237,9 @@ class TestGenerateRootTypeLine:
 
         content = "\n".join(result)
         assert "**Root Type:**" in content
-        assert "list[int]" in content
+        # Should contain RST cross-references for list and int
+        assert ":py:class:`list`" in content
+        assert ":py:class:`int`" in content
 
     def test_generates_root_type_for_dict(self) -> None:
         """Test that root type line is generated for dict RootModel."""
@@ -222,7 +249,8 @@ class TestGenerateRootTypeLine:
 
         content = "\n".join(result)
         assert "**Root Type:**" in content
-        assert "dict" in content
+        # Should contain RST cross-reference for dict
+        assert ":py:class:`dict`" in content
 
 
 class TestGenerateValidatorSummaryTable:
@@ -234,7 +262,9 @@ class TestGenerateValidatorSummaryTable:
             get_validator_info(SingleFieldValidator, "check_positive"),
         ]
 
-        result = generate_validator_summary_table(validators)
+        result = generate_validator_summary_table(
+            validators, SINGLE_FIELD_VALIDATOR_PATH
+        )
 
         # Check that result is a list of lines
         assert isinstance(result, list)
@@ -245,16 +275,20 @@ class TestGenerateValidatorSummaryTable:
         assert ".. list-table:: Validators" in table_content
         assert ":header-rows: 1" in table_content
 
-    def test_includes_validator_names(self) -> None:
-        """Test that validator names are included."""
+    def test_includes_validator_names_as_cross_references(self) -> None:
+        """Test that validator names are cross-references."""
         validators = [
             get_validator_info(SingleFieldValidator, "check_positive"),
         ]
 
-        result = generate_validator_summary_table(validators)
+        result = generate_validator_summary_table(
+            validators, SINGLE_FIELD_VALIDATOR_PATH
+        )
         table_content = "\n".join(result)
 
-        assert "``check_positive``" in table_content
+        # Should have :py:obj: reference
+        assert ":py:obj:`check_positive <" in table_content
+        assert SINGLE_FIELD_VALIDATOR_PATH in table_content
 
     def test_includes_mode(self) -> None:
         """Test that validator mode is included."""
@@ -262,21 +296,24 @@ class TestGenerateValidatorSummaryTable:
             get_validator_info(BeforeValidator, "coerce_string"),
         ]
 
-        result = generate_validator_summary_table(validators)
+        result = generate_validator_summary_table(validators, BEFORE_VALIDATOR_PATH)
         table_content = "\n".join(result)
 
         assert "before" in table_content
 
-    def test_includes_fields(self) -> None:
-        """Test that validated fields are included."""
+    def test_includes_fields_as_cross_references(self) -> None:
+        """Test that validated fields are cross-references."""
         validators = [
             get_validator_info(SingleFieldValidator, "check_positive"),
         ]
 
-        result = generate_validator_summary_table(validators, list_fields=True)
+        result = generate_validator_summary_table(
+            validators, SINGLE_FIELD_VALIDATOR_PATH, list_fields=True
+        )
         table_content = "\n".join(result)
 
-        assert "``value``" in table_content
+        # Should have :py:obj: reference for field
+        assert ":py:obj:`value <" in table_content
 
     def test_shows_model_for_model_validators(self) -> None:
         """Test that model validators show 'model' in fields column."""
@@ -284,89 +321,29 @@ class TestGenerateValidatorSummaryTable:
             get_validator_info(ModelValidatorAfter, "passwords_match"),
         ]
 
-        result = generate_validator_summary_table(validators, list_fields=True)
+        result = generate_validator_summary_table(
+            validators, MODEL_VALIDATOR_AFTER_PATH, list_fields=True
+        )
         table_content = "\n".join(result)
 
         assert "*model*" in table_content
 
     def test_returns_empty_for_no_validators(self) -> None:
         """Test that empty list is returned for no validators."""
-        result = generate_validator_summary_table([])
+        result = generate_validator_summary_table([], SINGLE_FIELD_VALIDATOR_PATH)
         assert result == []
-
-
-class TestValidatorSummaryWithCrossRefs:
-    """Tests for validator summary table with cross-references."""
-
-    def test_generates_validator_xrefs_with_model_path(self) -> None:
-        """Test that validator names become cross-references with model_path."""
-        validators = [
-            get_validator_info(SingleFieldValidator, "check_positive"),
-        ]
-        model_path = "tests.assets.models.validators.SingleFieldValidator"
-
-        result = generate_validator_summary_table(validators, model_path=model_path)
-        table_content = "\n".join(result)
-
-        # Should have :py:obj: reference instead of backticks
-        assert ":py:obj:`check_positive <" in table_content
-        assert model_path in table_content
-
-    def test_generates_field_xrefs_with_model_path(self) -> None:
-        """Test that field names become cross-references with model_path."""
-        validators = [
-            get_validator_info(SingleFieldValidator, "check_positive"),
-        ]
-        model_path = "tests.assets.models.validators.SingleFieldValidator"
-
-        result = generate_validator_summary_table(
-            validators, list_fields=True, model_path=model_path
-        )
-        table_content = "\n".join(result)
-
-        # Should have :py:obj: reference for field
-        assert ":py:obj:`value <" in table_content
 
     def test_multi_field_validator_xrefs(self) -> None:
         """Test that multiple fields get cross-references."""
         validators = [
             get_validator_info(MultiFieldValidator, "check_bounds"),
         ]
-        model_path = "tests.assets.models.validators.MultiFieldValidator"
 
         result = generate_validator_summary_table(
-            validators, list_fields=True, model_path=model_path
+            validators, MULTI_FIELD_VALIDATOR_PATH, list_fields=True
         )
         table_content = "\n".join(result)
 
         # Both fields should have references
         assert ":py:obj:`x <" in table_content
         assert ":py:obj:`y <" in table_content
-
-    def test_no_xrefs_without_model_path(self) -> None:
-        """Test that no cross-references without model_path."""
-        validators = [
-            get_validator_info(SingleFieldValidator, "check_positive"),
-        ]
-
-        result = generate_validator_summary_table(validators)
-        table_content = "\n".join(result)
-
-        # Should have backticks, not :py:obj:
-        assert "``check_positive``" in table_content
-        assert ":py:obj:" not in table_content
-
-    def test_model_validator_no_field_xrefs(self) -> None:
-        """Test that model validators show *model* not field xrefs."""
-        validators = [
-            get_validator_info(ModelValidatorAfter, "passwords_match"),
-        ]
-        model_path = "tests.assets.models.validators.ModelValidatorAfter"
-
-        result = generate_validator_summary_table(
-            validators, list_fields=True, model_path=model_path
-        )
-        table_content = "\n".join(result)
-
-        # Model validators show *model*, not field references
-        assert "*model*" in table_content
