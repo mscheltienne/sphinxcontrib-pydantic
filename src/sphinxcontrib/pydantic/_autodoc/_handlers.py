@@ -82,6 +82,43 @@ def is_pydantic_internal(name: str) -> bool:
     return False
 
 
+# Base classes whose methods should be skipped when documenting Pydantic models.
+# Methods inherited from these classes have Markdown-style docstrings that are
+# incompatible with Sphinx cross-references.
+_PYDANTIC_BASE_CLASSES: tuple[str, ...] = ("BaseModel", "SQLModel")
+
+
+def is_pydantic_base_member(obj: Any) -> bool:
+    """Check if a member is inherited from a Pydantic/SQLModel base class.
+
+    This checks the ``__qualname__`` attribute to determine if the member
+    is defined on BaseModel, SQLModel, or their parent classes. Methods
+    inherited from these base classes have Markdown-style docstrings that
+    cause cross-reference warnings when processed by Sphinx.
+
+    Parameters
+    ----------
+    obj : Any
+        The member object to check.
+
+    Returns
+    -------
+    bool
+        True if the member is from a Pydantic/SQLModel base class.
+    """
+    # Get qualname, handling classmethods/staticmethods which wrap the function
+    qualname = getattr(obj, "__qualname__", "")
+    if hasattr(obj, "__func__"):  # classmethod/staticmethod wrapper
+        qualname = getattr(obj.__func__, "__qualname__", "")
+
+    # Check if defined on known Pydantic/SQLModel base classes
+    for base in _PYDANTIC_BASE_CLASSES:
+        if qualname.startswith(f"{base}."):
+            return True
+
+    return False
+
+
 def should_skip_member(
     what: str,
     name: str,
@@ -120,6 +157,11 @@ def should_skip_member(
     if is_pydantic_internal(name):
         return True
 
+    # Skip methods inherited from Pydantic/SQLModel base classes.
+    # These have Markdown-style docstrings that cause cross-reference warnings.
+    if is_pydantic_base_member(obj):
+        return True
+
     return None
 
 
@@ -133,7 +175,10 @@ def autodoc_skip_member(
 ) -> bool | None:
     """Handle autodoc-skip-member event.
 
-    This event handler skips Pydantic internal attributes from documentation.
+    This event handler skips Pydantic internal attributes and inherited
+    BaseModel/SQLModel methods from documentation. Inherited methods are
+    skipped because their docstrings use Markdown format which causes
+    cross-reference warnings in Sphinx.
 
     Parameters
     ----------

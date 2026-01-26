@@ -288,6 +288,155 @@ class TestAutodocWithSettings:
         assert class_name.get_text(strip=True) == "SimpleSettings"
 
 
+class TestInheritedMembersSkipping:
+    """Tests for skipping inherited BaseModel/SQLModel members."""
+
+    def test_autoclass_with_inherited_members_skips_basemodel_methods(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that inherited BaseModel methods are skipped."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.basic.SimpleModel\n"
+            "   :members:\n"
+            "   :inherited-members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # Get all documented member IDs (methods and attributes)
+        all_sigs = soup.select("dl.py.method dt.sig, dl.py.attribute dt.sig")
+        documented_member_ids = {sig.get("id", "") for sig in all_sigs}
+
+        # These inherited BaseModel methods must NOT be documented
+        basemodel_methods = {
+            "model_dump",
+            "model_validate",
+            "model_construct",
+            "model_copy",
+            "model_dump_json",
+            "model_json_schema",
+            "model_rebuild",
+            "model_validate_json",
+            "model_validate_strings",
+        }
+
+        # Check that none of the BaseModel methods appear in documented members
+        for method in basemodel_methods:
+            for member_id in documented_member_ids:
+                assert method not in member_id, (
+                    f"Inherited BaseModel method '{method}' should not be documented"
+                )
+
+    def test_autoclass_with_inherited_members_keeps_user_methods(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that user-defined methods are kept with :inherited-members:."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.validators.SingleFieldValidator\n"
+            "   :members:\n"
+            "   :inherited-members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # Get all documented method IDs
+        method_sigs = soup.select("dl.py.method dt.sig")
+        documented_methods = {sig.get("id", "") for sig in method_sigs}
+
+        # User-defined validator method should be documented
+        found_check_positive = any(
+            "check_positive" in method_id for method_id in documented_methods
+        )
+        assert found_check_positive, (
+            "User-defined method 'check_positive' should be documented"
+        )
+
+    def test_sqlmodel_with_inherited_members_skips_sqlmodel_methods(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that inherited SQLModel methods are skipped with :inherited-members:."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.sqlmodel_models.HeroCreate\n"
+            "   :members:\n"
+            "   :inherited-members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # Get all documented member IDs
+        all_sigs = soup.select("dl.py.method dt.sig, dl.py.attribute dt.sig")
+        documented_member_ids = {sig.get("id", "") for sig in all_sigs}
+
+        # SQLModel inherited methods must NOT be documented
+        sqlmodel_methods = {"model_dump", "model_validate", "sqlmodel_update"}
+
+        for method in sqlmodel_methods:
+            for member_id in documented_member_ids:
+                assert method not in member_id, (
+                    f"Inherited SQLModel method '{method}' should not be documented"
+                )
+
+
 class TestConfigurationEffects:
     """Tests for configuration option effects on autodoc."""
 

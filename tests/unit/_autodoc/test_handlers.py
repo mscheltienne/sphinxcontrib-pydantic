@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from sphinxcontrib.pydantic._autodoc._handlers import (
+    _PYDANTIC_BASE_CLASSES,
     PYDANTIC_SKIP_MEMBERS,
+    is_pydantic_base_member,
     is_pydantic_internal,
     should_skip_member,
 )
 from tests.assets.models.basic import SimpleModel
+from tests.assets.models.sqlmodel_models import HeroCreate
+from tests.assets.models.validators import SingleFieldValidator
 
 
 class TestIsPydanticInternal:
@@ -88,8 +92,8 @@ class TestShouldSkipMember:
         )
         assert result is None  # Don't override existing skip decision
 
-    def test_does_not_skip_methods(self) -> None:
-        """Test that methods are not skipped by our handler."""
+    def test_skips_inherited_basemodel_methods(self) -> None:
+        """Test that inherited BaseModel methods are skipped."""
         result = should_skip_member(
             what="method",
             name="model_dump",
@@ -97,8 +101,96 @@ class TestShouldSkipMember:
             skip=False,
             options={},
         )
-        # We only skip attributes, not methods
+        # Inherited BaseModel methods should be skipped
+        assert result is True
+
+    def test_skips_inherited_basemodel_classmethods(self) -> None:
+        """Test that inherited BaseModel classmethods are skipped."""
+        result = should_skip_member(
+            what="method",
+            name="model_validate",
+            obj=SimpleModel.model_validate,
+            skip=False,
+            options={},
+        )
+        # Inherited BaseModel classmethods should be skipped
+        assert result is True
+
+    def test_does_not_skip_user_defined_methods(self) -> None:
+        """Test that user-defined methods are not skipped."""
+        result = should_skip_member(
+            what="method",
+            name="check_positive",
+            obj=SingleFieldValidator.check_positive,
+            skip=False,
+            options={},
+        )
+        # User-defined methods should not be skipped
         assert result is None
+
+    def test_skips_inherited_sqlmodel_methods(self) -> None:
+        """Test that inherited SQLModel methods are skipped."""
+        result = should_skip_member(
+            what="method",
+            name="model_dump",
+            obj=HeroCreate.model_dump,
+            skip=False,
+            options={},
+        )
+        # Inherited SQLModel methods should be skipped
+        assert result is True
+
+
+class TestIsPydanticBaseMember:
+    """Tests for is_pydantic_base_member function."""
+
+    def test_basemodel_method_is_base_member(self) -> None:
+        """Test that BaseModel methods are detected as base members."""
+        assert is_pydantic_base_member(SimpleModel.model_dump) is True
+
+    def test_basemodel_classmethod_is_base_member(self) -> None:
+        """Test that BaseModel classmethods are detected as base members."""
+        assert is_pydantic_base_member(SimpleModel.model_validate) is True
+
+    def test_basemodel_model_construct_is_base_member(self) -> None:
+        """Test that model_construct is detected as base member."""
+        assert is_pydantic_base_member(SimpleModel.model_construct) is True
+
+    def test_basemodel_model_copy_is_base_member(self) -> None:
+        """Test that model_copy is detected as base member."""
+        assert is_pydantic_base_member(SimpleModel.model_copy) is True
+
+    def test_sqlmodel_method_is_base_member(self) -> None:
+        """Test that SQLModel methods are detected as base members."""
+        assert is_pydantic_base_member(HeroCreate.model_dump) is True
+
+    def test_sqlmodel_classmethod_is_base_member(self) -> None:
+        """Test that SQLModel classmethods are detected as base members."""
+        assert is_pydantic_base_member(HeroCreate.model_validate) is True
+
+    def test_user_defined_method_not_base_member(self) -> None:
+        """Test that user-defined methods are not detected as base members."""
+        assert is_pydantic_base_member(SingleFieldValidator.check_positive) is False
+
+    def test_string_not_base_member(self) -> None:
+        """Test that non-callable objects return False."""
+        assert is_pydantic_base_member("some_string") is False
+
+    def test_none_not_base_member(self) -> None:
+        """Test that None returns False."""
+        assert is_pydantic_base_member(None) is False
+
+
+class TestPydanticBaseClasses:
+    """Tests for the _PYDANTIC_BASE_CLASSES constant."""
+
+    def test_contains_basemodel(self) -> None:
+        """Test that BaseModel is in the base classes."""
+        assert "BaseModel" in _PYDANTIC_BASE_CLASSES
+
+    def test_contains_sqlmodel(self) -> None:
+        """Test that SQLModel is in the base classes."""
+        assert "SQLModel" in _PYDANTIC_BASE_CLASSES
 
 
 class TestPydanticSkipMembers:
