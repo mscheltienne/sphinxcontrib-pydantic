@@ -5,10 +5,7 @@ from __future__ import annotations
 import pytest
 from docutils.parsers.rst import directives
 
-from sphinxcontrib.pydantic._directives._base import (
-    PydanticDirective,
-    flag_or_value,
-)
+from sphinxcontrib.pydantic._directives import PydanticDirective, flag_or_value
 
 
 class TestFlagOrValue:

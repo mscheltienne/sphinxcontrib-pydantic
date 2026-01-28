@@ -51,18 +51,10 @@ def format_default_value(value: Any) -> str:
     """
     if value is None:
         return "None"
-
-    if isinstance(value, str):
-        return repr(value)
-
+    # Must check bool before int since bool is a subclass of int
     if isinstance(value, bool):
         return str(value)
-
     if isinstance(value, (int, float)):
         return str(value)
-
-    if isinstance(value, (list, tuple, dict, set)):
-        return repr(value)
-
-    # For other objects, use repr
+    # Handles str, list, tuple, dict, set, and everything else
     return repr(value)

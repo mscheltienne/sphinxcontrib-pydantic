@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from sphinxcontrib.pydantic._directives._base import PydanticDirective
-from sphinxcontrib.pydantic._directives._model import PydanticModelDirective
-from sphinxcontrib.pydantic._directives._settings import (
+from sphinxcontrib.pydantic._directives import (
     AutoPydanticSettingsDirective,
+    PydanticDirective,
+    PydanticModelDirective,
     PydanticSettingsDirective,
 )
 

@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from docutils.parsers.rst import directives
 
-from sphinxcontrib.pydantic._directives._base import flag_or_value
-from sphinxcontrib.pydantic._directives._model import PydanticModelDirective
+from sphinxcontrib.pydantic._directives import (
+    AutoPydanticModelDirective,
+    PydanticDirective,
+    PydanticModelDirective,
+    flag_or_value,
+)
 
 
 class TestPydanticModelDirective:
@@ -13,8 +17,6 @@ class TestPydanticModelDirective:
 
     def test_inherits_from_base(self) -> None:
         """Directive inherits from PydanticDirective."""
-        from sphinxcontrib.pydantic._directives._base import PydanticDirective
-
         assert issubclass(PydanticModelDirective, PydanticDirective)
 
     def test_has_model_specific_options(self) -> None:
@@ -58,16 +60,8 @@ class TestAutoPydanticModelDirective:
 
     def test_exists(self) -> None:
         """AutoPydanticModelDirective exists."""
-        from sphinxcontrib.pydantic._directives._model import (
-            AutoPydanticModelDirective,
-        )
-
         assert AutoPydanticModelDirective is not None
 
     def test_inherits_from_model_directive(self) -> None:
         """AutoPydanticModelDirective inherits from PydanticModelDirective."""
-        from sphinxcontrib.pydantic._directives._model import (
-            AutoPydanticModelDirective,
-        )
-
         assert issubclass(AutoPydanticModelDirective, PydanticModelDirective)

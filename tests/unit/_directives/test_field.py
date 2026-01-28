@@ -5,7 +5,7 @@ from __future__ import annotations
 from docutils.parsers.rst import directives
 from sphinx.domains.python import PyAttribute
 
-from sphinxcontrib.pydantic._directives._field import PydanticFieldDirective
+from sphinxcontrib.pydantic._directives import PydanticFieldDirective
 
 
 class TestPydanticFieldDirective:

@@ -8,7 +8,7 @@ from docutils import nodes
 from sphinx.util import logging
 
 from sphinxcontrib.pydantic._directives._model import PydanticModelDirective
-from sphinxcontrib.pydantic._inspection import is_pydantic_settings
+from sphinxcontrib.pydantic._inspection import get_model_info, is_pydantic_settings
 
 if TYPE_CHECKING:
     from typing import Any
@@ -70,8 +70,6 @@ class PydanticSettingsDirective(PydanticModelDirective):
             ]
 
         # Get model info (settings are also models)
-        from sphinxcontrib.pydantic._inspection import get_model_info
-
         model_info = get_model_info(model)
 
         # Generate the documentation using parent's method
