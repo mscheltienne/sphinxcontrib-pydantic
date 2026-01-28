@@ -8,8 +8,10 @@ from docutils import nodes
 from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
 from sphinx import addnodes
+from sphinx.domains.python._annotations import _parse_annotation
 from sphinx.util import logging
 from sphinx.util.nodes import make_id
+from sphinx.util.typing import stringify_annotation
 
 from sphinxcontrib.pydantic._directives._base import PydanticDirective, flag_or_value
 from sphinxcontrib.pydantic._inspection import (
@@ -26,7 +28,6 @@ from sphinxcontrib.pydantic._rendering import (
     GeneratorConfig,
     config_from_directive,
     create_role_reference,
-    format_type_annotation,
     generate_field_summary_table,
     generate_validator_summary_table,
 )
@@ -406,12 +407,15 @@ class PydanticModelDirective(PydanticDirective):
             # Add field name
             sig += addnodes.desc_name(field.name, field.name)
 
-            # Add type annotation
+            # Add type annotation with proper cross-references
             if field.annotation is not None:
                 sig += addnodes.desc_sig_punctuation("", ":")
                 sig += addnodes.desc_sig_space()
-                type_str = format_type_annotation(field.annotation, as_rst=False)
-                sig += addnodes.desc_sig_name("", type_str)
+                # Convert type to string, then parse to nodes with cross-references
+                type_str = stringify_annotation(field.annotation, mode="smart")
+                type_nodes = _parse_annotation(type_str, self.env)
+                for node in type_nodes:
+                    sig += node
 
             # Add [Required] or [Optional] marker
             sig += addnodes.desc_sig_space()
