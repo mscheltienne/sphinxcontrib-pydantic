@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 from sphinx.util.typing import restify, stringify_annotation
@@ -73,8 +74,6 @@ def generate_json_schema_block(model: type) -> list[str]:
     list[str]
         RST lines for the JSON schema block, or empty list on error.
     """
-    import json
-
     try:
         schema = model.model_json_schema()
         schema_str = json.dumps(schema, indent=2)
