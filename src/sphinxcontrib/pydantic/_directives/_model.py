@@ -14,6 +14,7 @@ from sphinx.util.nodes import make_id
 from sphinx.util.typing import stringify_annotation
 
 from sphinxcontrib.pydantic._directives._base import PydanticDirective, flag_or_value
+from sphinxcontrib.pydantic._directives._docstring import process_docstring
 from sphinxcontrib.pydantic._inspection import (
     FieldInfo,
     ValidatorInfo,
@@ -256,6 +257,9 @@ class PydanticModelDirective(PydanticDirective):
     ) -> None:
         """Parse a docstring and add it to the parent node.
 
+        Processes the docstring through registered autodoc handlers
+        (Napoleon, numpydoc, custom) then parses the result as RST.
+
         Parameters
         ----------
         docstring : str
@@ -263,10 +267,18 @@ class PydanticModelDirective(PydanticDirective):
         parent : nodes.Element
             The parent node to add content to.
         """
-        # Create a paragraph for the docstring
-        lines = docstring.strip().split("\n")
-        string_list = StringList(lines)
-        self.state.nested_parse(string_list, 0, parent)
+        # Process through registered docstring handlers
+        lines = process_docstring(
+            self.env.app,
+            docstring,
+            what="class",
+            name=self.get_object_path(),
+            obj=None,  # Could pass model class if needed
+        )
+
+        if lines:
+            string_list = StringList(lines)
+            self.state.nested_parse(string_list, 0, parent)
 
     def _add_field_summary(
         self,

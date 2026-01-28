@@ -1958,6 +1958,7 @@ style = [
 ]
 test = [
     { name = "beautifulsoup4" },
+    { name = "numpydoc" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-randomly" },
@@ -1995,6 +1996,7 @@ style = [
 ]
 test = [
     { name = "beautifulsoup4", specifier = ">=4.12" },
+    { name = "numpydoc" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-cov" },
     { name = "pytest-randomly" },

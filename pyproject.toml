@@ -23,6 +23,7 @@ style = [
 ]
 test = [
   'beautifulsoup4>=4.12',
+  'numpydoc',
   'pytest-cov',
   'pytest-randomly',
   'pytest-timeout',
