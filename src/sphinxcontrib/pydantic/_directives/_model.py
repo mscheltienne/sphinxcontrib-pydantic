@@ -268,8 +268,10 @@ class PydanticModelDirective(PydanticDirective):
             The parent node to add content to.
         """
         # Process through registered docstring handlers
+        # Note: Using env._app directly as env.app is deprecated in Sphinx 11
+        # with no replacement (N/A). This follows Sphinx's internal pattern.
         lines = process_docstring(
-            self.env.app,
+            self.env._app,
             docstring,
             what="class",
             name=self.get_object_path(),

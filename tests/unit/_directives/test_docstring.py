@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from sphinx.testing.util import SphinxTestApp
@@ -65,9 +65,7 @@ class TestProcessDocstring:
         app.connect("autodoc-process-docstring", handler)
 
         docstring = "Test docstring."
-        process_docstring(
-            app, docstring, what="class", name="test.Model", obj=None
-        )
+        process_docstring(app, docstring, what="class", name="test.Model", obj=None)
 
         assert len(handler_called) == 1
         what, name, obj, options, lines = handler_called[0]
@@ -130,7 +128,7 @@ class TestProcessDocstringWithNumpydoc:
     def test_numpydoc_processes_see_also(
         self, app_with_numpydoc: SphinxTestApp
     ) -> None:
-        """numpydoc converts See Also section to seealso directive."""
+        """Numpydoc converts See Also section to seealso directive."""
         docstring = """A class docstring.
 
 See Also
@@ -145,10 +143,8 @@ OtherClass : A related class.
         result_text = "\n".join(result)
         assert ".. seealso::" in result_text or "See Also" not in result_text
 
-    def test_numpydoc_processes_notes(
-        self, app_with_numpydoc: SphinxTestApp
-    ) -> None:
-        """numpydoc converts Notes section appropriately."""
+    def test_numpydoc_processes_notes(self, app_with_numpydoc: SphinxTestApp) -> None:
+        """Numpydoc converts Notes section appropriately."""
         docstring = """A class docstring.
 
 Notes
@@ -210,9 +206,7 @@ Args:
 Returns:
     The return value.
 """
-        result = process_docstring(
-            app, docstring, what="function", name="test.func"
-        )
+        result = process_docstring(app, docstring, what="function", name="test.func")
 
         # Napoleon should convert Args to :param: fields
         result_text = "\n".join(result)
