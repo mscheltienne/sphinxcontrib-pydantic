@@ -537,3 +537,117 @@ class TestConfigurationEffects:
             f"Expected 'pydantic' in prefix, got: {prefix_text}"
         )
         assert "model" in prefix_text, f"Expected 'model' in prefix, got: {prefix_text}"
+
+
+class TestShowJsonAutodoc:
+    """Tests for show_json configuration with autodoc."""
+
+    def test_show_json_disabled_by_default(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that JSON schema is not shown by default."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.basic.SimpleModel\n"
+            "   :members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # JSON Schema should NOT be present by default
+        page_text = soup.get_text()
+        assert "JSON Schema" not in page_text
+
+    def test_show_json_enabled_shows_schema(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that JSON schema is shown when enabled."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+            "sphinxcontrib_pydantic_model_show_json = True\n"
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.basic.SimpleModel\n"
+            "   :members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # JSON Schema heading should be present
+        page_text = soup.get_text()
+        assert "JSON Schema" in page_text
+
+        # JSON structure elements should be present
+        assert "properties" in page_text
+
+    def test_show_json_settings_enabled_shows_schema(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that JSON schema works for settings when enabled."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        (srcdir / "conf.py").write_text(
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+            "sphinxcontrib_pydantic_settings_show_json = True\n"
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: tests.assets.models.settings.SimpleSettings\n"
+            "   :members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # JSON Schema should be present for settings
+        page_text = soup.get_text()
+        assert "JSON Schema" in page_text

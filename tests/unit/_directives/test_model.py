@@ -52,6 +52,48 @@ class TestPydanticModelDirective:
         assert "undoc-members" in spec
         assert spec["undoc-members"] == directives.flag
 
+    def test_has_field_display_options(self) -> None:
+        """Directive has field display options for per-directive override."""
+        spec = PydanticModelDirective.option_spec
+        assert "show-alias" in spec
+        assert "show-default" in spec
+        assert "show-required" in spec
+        assert "show-constraints" in spec
+
+    def test_has_validator_display_options(self) -> None:
+        """Directive has validator display options."""
+        spec = PydanticModelDirective.option_spec
+        assert "list-fields" in spec
+
+    def test_has_signature_options(self) -> None:
+        """Directive has signature customization options."""
+        spec = PydanticModelDirective.option_spec
+        assert "signature-prefix" in spec
+        assert "hide-paramlist" in spec
+
+    def test_field_options_use_flag_or_value(self) -> None:
+        """Field display options use flag_or_value converter."""
+        spec = PydanticModelDirective.option_spec
+        assert spec["show-alias"] == flag_or_value
+        assert spec["show-default"] == flag_or_value
+        assert spec["show-required"] == flag_or_value
+        assert spec["show-constraints"] == flag_or_value
+
+    def test_validator_options_use_flag_or_value(self) -> None:
+        """Validator display options use flag_or_value converter."""
+        spec = PydanticModelDirective.option_spec
+        assert spec["list-fields"] == flag_or_value
+
+    def test_signature_prefix_uses_unchanged(self) -> None:
+        """signature-prefix accepts string values."""
+        spec = PydanticModelDirective.option_spec
+        assert spec["signature-prefix"] == directives.unchanged
+
+    def test_hide_paramlist_uses_flag_or_value(self) -> None:
+        """hide-paramlist option uses flag_or_value converter."""
+        spec = PydanticModelDirective.option_spec
+        assert spec["hide-paramlist"] == flag_or_value
+
 
 class TestAutoPydanticModelDirective:
     """Tests for the AutoPydanticModelDirective class."""

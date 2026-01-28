@@ -60,10 +60,20 @@ class PydanticModelDirective(PydanticDirective):
         # Inherited from base
         "module": directives.unchanged,
         "noindex": directives.flag,
-        # Model-specific options
+        # Model-specific display options
         "show-json": flag_or_value,
         "show-field-summary": flag_or_value,
         "show-validator-summary": flag_or_value,
+        # Field display options
+        "show-alias": flag_or_value,
+        "show-default": flag_or_value,
+        "show-required": flag_or_value,
+        "show-constraints": flag_or_value,
+        # Validator display options
+        "list-fields": flag_or_value,
+        # Signature options
+        "signature-prefix": directives.unchanged,
+        "hide-paramlist": flag_or_value,
         # Member options
         "members": directives.unchanged,
         "inherited-members": directives.unchanged,

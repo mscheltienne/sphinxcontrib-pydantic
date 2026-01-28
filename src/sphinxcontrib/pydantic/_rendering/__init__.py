@@ -8,6 +8,7 @@ from sphinxcontrib.pydantic._rendering._config import (
 from sphinxcontrib.pydantic._rendering._rst import (
     format_default_value,
     format_type_annotation,
+    generate_json_schema_block,
 )
 from sphinxcontrib.pydantic._rendering._summary import (
     create_role_reference,

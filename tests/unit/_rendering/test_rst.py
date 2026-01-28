@@ -7,7 +7,9 @@ from typing import Union
 from sphinxcontrib.pydantic._rendering import (
     format_default_value,
     format_type_annotation,
+    generate_json_schema_block,
 )
+from tests.assets.models.basic import DocumentedModel, SimpleModel
 
 
 class TestFormatTypeAnnotation:
@@ -216,3 +218,54 @@ class TestFormatDefaultValue:
         """Test formatting of dicts."""
         assert format_default_value({"a": 1}) == "{'a': 1}"
         assert format_default_value({}) == "{}"
+
+
+class TestGenerateJsonSchemaBlock:
+    """Tests for generate_json_schema_block function."""
+
+    def test_generates_code_block_for_simple_model(self) -> None:
+        """Test JSON schema generation for a simple model."""
+        lines = generate_json_schema_block(SimpleModel)
+
+        assert len(lines) > 0
+        assert "**JSON Schema:**" in lines
+        assert ".. code-block:: json" in lines
+
+    def test_contains_json_structure(self) -> None:
+        """Test that generated lines contain JSON schema structure."""
+        lines = generate_json_schema_block(SimpleModel)
+        content = "\n".join(lines)
+
+        # JSON schema should contain these standard keys
+        assert "properties" in content
+        assert "title" in content
+
+    def test_returns_empty_on_non_pydantic_class(self) -> None:
+        """Test that non-Pydantic classes return empty list."""
+
+        class NotAPydanticModel:
+            pass
+
+        lines = generate_json_schema_block(NotAPydanticModel)
+        assert lines == []
+
+    def test_schema_is_properly_indented(self) -> None:
+        """Test that JSON content is indented for RST code block."""
+        lines = generate_json_schema_block(SimpleModel)
+
+        # Find the code-block directive
+        code_block_idx = lines.index(".. code-block:: json")
+
+        # Lines after the empty line following code-block should be indented
+        for line in lines[code_block_idx + 2 : -1]:  # Skip empty line and last empty
+            if line.strip():  # Non-empty lines
+                assert line.startswith("   "), f"Line not indented: {line!r}"
+
+    def test_generates_schema_for_model_with_fields(self) -> None:
+        """Test schema generation includes field information."""
+        lines = generate_json_schema_block(DocumentedModel)
+        content = "\n".join(lines)
+
+        # Should include field names from the model
+        assert "name" in content
+        assert "value" in content

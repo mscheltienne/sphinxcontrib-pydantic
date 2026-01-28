@@ -20,6 +20,7 @@ from sphinxcontrib.pydantic._rendering import (
     config_from_sphinx,
     create_role_reference,
     generate_field_summary_table,
+    generate_json_schema_block,
     generate_root_type_line,
     generate_validator_summary_table,
 )
@@ -275,6 +276,12 @@ def _process_class_docstring(
     )
     if config.show_validator_summary and validators:
         _add_validator_summary(obj, model_info, validators, config, lines)
+
+    # Add JSON schema if configured
+    if config.show_json:
+        json_lines = generate_json_schema_block(obj)
+        if json_lines:
+            lines.extend(json_lines)
 
 
 def _process_attribute_docstring(

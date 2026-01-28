@@ -58,3 +58,31 @@ def format_default_value(value: Any) -> str:
         return str(value)
     # Handles str, list, tuple, dict, set, and everything else
     return repr(value)
+
+
+def generate_json_schema_block(model: type) -> list[str]:
+    """Generate RST lines for a JSON schema code block.
+
+    Parameters
+    ----------
+    model : type
+        The Pydantic model class.
+
+    Returns
+    -------
+    list[str]
+        RST lines for the JSON schema block, or empty list on error.
+    """
+    import json
+
+    try:
+        schema = model.model_json_schema()
+        schema_str = json.dumps(schema, indent=2)
+
+        lines = ["", "**JSON Schema:**", "", ".. code-block:: json", ""]
+        # Indent each line of the schema for the code block
+        lines.extend(f"   {line}" for line in schema_str.split("\n"))
+        lines.append("")
+        return lines
+    except Exception:
+        return []
