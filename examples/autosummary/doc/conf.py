@@ -70,3 +70,17 @@ intersphinx_mapping.update(
         "pydantic": ("https://docs.pydantic.dev/latest/", None),
     }
 )
+
+# Nitpick ignore for types without intersphinx inventories
+nitpick_ignore = [
+    # SQLModel has no intersphinx inventory
+    ("py:class", "sqlmodel.main.SQLModel"),
+]
+
+# Nitpick ignore regex for fields shown in summary tables but not documented
+# (fields lack docstrings and numpydoc_show_inherited_class_members=False)
+nitpick_ignore_regex = [
+    # Fields in summary tables that aren't documented as attributes
+    (r"py:obj", r"example_autosummary\.models\.\w+\.\w+"),
+    (r"py:obj", r"example_autosummary\.database\.\w+\.\w+\.\w+"),
+]

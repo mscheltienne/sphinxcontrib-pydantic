@@ -40,7 +40,7 @@ class TestValidatorFieldMap:
         )
 
         with pytest.raises(AttributeError):
-            mapping.field_name = "other"  # type: ignore[misc]
+            mapping.field_name = "other"
 
 
 class TestGetValidatorFieldMappings:

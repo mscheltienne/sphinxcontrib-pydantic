@@ -21,6 +21,8 @@ from sphinxcontrib.pydantic._inspection import (
     is_pydantic_model,
 )
 from sphinxcontrib.pydantic._rendering import (
+    GeneratorConfig,
+    config_from_directive,
     generate_field_summary_table,
     generate_validator_summary_table,
 )
@@ -50,6 +52,9 @@ class PydanticModelDirective(PydanticDirective):
         .. pydantic-model:: MyModel
            :module: mymodule
     """
+
+    #: Config prefix for looking up Sphinx config values ("model" or "settings")
+    _config_prefix: ClassVar[str] = "model"
 
     option_spec: ClassVar[dict[str, Any]] = {
         # Inherited from base
@@ -146,6 +151,11 @@ class PydanticModelDirective(PydanticDirective):
         list[nodes.Node]
             List of docutils nodes.
         """
+        # Create config from directive options with Sphinx config fallback
+        config = config_from_directive(
+            self.options, self.env.config, prefix=self._config_prefix
+        )
+
         result: list[nodes.Node] = []
 
         # Create the main description node
@@ -161,11 +171,7 @@ class PydanticModelDirective(PydanticDirective):
         sig["fullname"] = model_info.name
 
         # Add signature prefix
-        prefix = self.get_option_or_config(
-            "signature-prefix",
-            "model_signature_prefix",
-            "model",
-        )
+        prefix = config.signature_prefix
         sig += addnodes.desc_annotation(prefix + " ", prefix + " ")
         sig += addnodes.desc_name(model_info.name, model_info.name)
 
@@ -192,35 +198,20 @@ class PydanticModelDirective(PydanticDirective):
         model_path = f"{model_info.module}.{model_info.name}"
 
         # Add field summary table
-        show_field_summary = self.get_option_or_config(
-            "show-field-summary",
-            "model_show_field_summary",
-            True,
-        )
-        if show_field_summary and model_info.field_names:
+        if config.show_field_summary and model_info.field_names:
             fields = [get_field_info(model, name) for name in model_info.field_names]
-            self._add_field_summary(fields, model_path, content)
+            self._add_field_summary(fields, model_path, config, content)
 
         # Add validator summary table
-        show_validator_summary = self.get_option_or_config(
-            "show-validator-summary",
-            "model_show_validator_summary",
-            True,
-        )
         validators = list(model_info.validator_names) + list(
             model_info.model_validator_names
         )
-        if show_validator_summary and validators:
+        if config.show_validator_summary and validators:
             validator_infos = [get_validator_info(model, name) for name in validators]
-            self._add_validator_summary(validator_infos, model_path, content)
+            self._add_validator_summary(validator_infos, model_path, config, content)
 
         # Add JSON schema if requested
-        show_json = self.get_option_or_config(
-            "show-json",
-            "model_show_json",
-            False,
-        )
-        if show_json:
+        if config.show_json:
             self._add_json_schema(model, content)
 
         desc += content
@@ -251,6 +242,7 @@ class PydanticModelDirective(PydanticDirective):
         self,
         fields: list[FieldInfo],
         model_path: str,
+        config: GeneratorConfig,
         parent: nodes.Element,
     ) -> None:
         """Add a field summary table to the parent node.
@@ -261,37 +253,18 @@ class PydanticModelDirective(PydanticDirective):
             The fields to summarize.
         model_path : str
             The fully qualified path to the model (e.g., ``module.ClassName``).
+        config : GeneratorConfig
+            The generator configuration.
         parent : nodes.Element
             The parent node to add content to.
         """
-        show_alias = self.get_option_or_config(
-            "show-alias",
-            "field_show_alias",
-            True,
-        )
-        show_default = self.get_option_or_config(
-            "show-default",
-            "field_show_default",
-            True,
-        )
-        show_required = self.get_option_or_config(
-            "show-required",
-            "field_show_required",
-            True,
-        )
-        show_constraints = self.get_option_or_config(
-            "show-constraints",
-            "field_show_constraints",
-            True,
-        )
-
         lines = generate_field_summary_table(
             fields,
             model_path,
-            show_alias=show_alias,
-            show_default=show_default,
-            show_required=show_required,
-            show_constraints=show_constraints,
+            show_alias=config.field_show_alias,
+            show_default=config.field_show_default,
+            show_required=config.field_show_required,
+            show_constraints=config.field_show_constraints,
         )
 
         if lines:
@@ -302,6 +275,7 @@ class PydanticModelDirective(PydanticDirective):
         self,
         validators: list[ValidatorInfo],
         model_path: str,
+        config: GeneratorConfig,
         parent: nodes.Element,
     ) -> None:
         """Add a validator summary table to the parent node.
@@ -312,19 +286,15 @@ class PydanticModelDirective(PydanticDirective):
             The validators to summarize.
         model_path : str
             The fully qualified path to the model (e.g., ``module.ClassName``).
+        config : GeneratorConfig
+            The generator configuration.
         parent : nodes.Element
             The parent node to add content to.
         """
-        list_fields = self.get_option_or_config(
-            "list-fields",
-            "validator_list_fields",
-            True,
-        )
-
         lines = generate_validator_summary_table(
             validators,
             model_path,
-            list_fields=list_fields,
+            list_fields=config.validator_list_fields,
         )
 
         if lines:

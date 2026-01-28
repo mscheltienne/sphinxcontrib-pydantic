@@ -1,5 +1,10 @@
 """RST rendering utilities for Pydantic models."""
 
+from sphinxcontrib.pydantic._rendering._config import (
+    GeneratorConfig,
+    config_from_directive,
+    config_from_sphinx,
+)
 from sphinxcontrib.pydantic._rendering._rst import (
     format_default_value,
     format_type_annotation,

@@ -34,6 +34,9 @@ class PydanticSettingsDirective(PydanticModelDirective):
            :module: mymodule
     """
 
+    #: Config prefix for looking up Sphinx config values
+    _config_prefix: ClassVar[str] = "settings"
+
     option_spec: ClassVar[dict[str, Any]] = {
         **PydanticModelDirective.option_spec,
     }
@@ -73,58 +76,6 @@ class PydanticSettingsDirective(PydanticModelDirective):
 
         # Generate the documentation using parent's method
         return self._generate_model_docs(model, model_info)
-
-    def get_option_or_config(
-        self,
-        option_name: str,
-        config_name: str,
-        default: Any,
-    ) -> Any:
-        """Get an option value from directive options or Sphinx configuration.
-
-        For settings directives, this looks up settings-specific config options
-        first, falling back to model config options if not found.
-
-        Parameters
-        ----------
-        option_name : str
-            The directive option name (e.g., "show-json").
-        config_name : str
-            The Sphinx config name suffix (e.g., "model_show_json").
-        default : Any
-            Default value if not found in options or config.
-
-        Returns
-        -------
-        Any
-            The option value.
-        """
-        # First check directive options
-        if option_name in self.options:
-            value = self.options[option_name]
-            # Handle flag options (None means True)
-            if value is None:
-                return True
-            # Handle no-* options
-            if option_name.startswith("no-"):
-                return False
-            return value
-
-        # Check for settings-specific config first
-        settings_config_name = config_name.replace("model_", "settings_")
-        full_settings_config = f"sphinxcontrib_pydantic_{settings_config_name}"
-
-        if hasattr(self.state.document.settings.env.config, full_settings_config):
-            return getattr(
-                self.state.document.settings.env.config, full_settings_config
-            )
-
-        # Fall back to model config
-        full_config = f"sphinxcontrib_pydantic_{config_name}"
-        if hasattr(self.state.document.settings.env.config, full_config):
-            return getattr(self.state.document.settings.env.config, full_config)
-
-        return default
 
 
 class AutoPydanticSettingsDirective(PydanticSettingsDirective):

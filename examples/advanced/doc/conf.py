@@ -119,3 +119,21 @@ nitpick_ignore = [
     ("py:class", "K"),
     ("py:class", "V"),
 ]
+
+# Nitpick ignore regex for inherited fields shown in summary tables
+# These fields appear in child class summaries but aren't documented
+# because numpydoc_show_inherited_class_members is False for these classes
+nitpick_ignore_regex = [
+    # Inherited fields from BaseEntity shown in child class summaries
+    (
+        r"py:obj",
+        r"example_advanced\.models\.base\.\w+\.(id|created_at|updated_at|name)",
+    ),
+    # DTO fields (description inherited from ProjectBase)
+    (
+        r"py:obj",
+        r"example_advanced\.database\.dto\.\w+\.(id|created_at|updated_at|name|description)",
+    ),
+    # Generic response inherited fields (data, error, success from Response)
+    (r"py:obj", r"example_advanced\.generics\.\w+\.(data|error|success)"),
+]

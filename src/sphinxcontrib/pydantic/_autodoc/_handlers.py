@@ -16,14 +16,12 @@ from sphinxcontrib.pydantic._inspection import (
     is_pydantic_settings,
 )
 from sphinxcontrib.pydantic._rendering import (
+    GeneratorConfig,
+    config_from_sphinx,
     create_role_reference,
     generate_field_summary_table,
     generate_root_type_line,
     generate_validator_summary_table,
-)
-from sphinxcontrib.pydantic._rendering._rst import (
-    format_default_value,
-    format_type_annotation,
 )
 
 if TYPE_CHECKING:
@@ -263,33 +261,20 @@ def _process_class_docstring(
         _logger.warning("Failed to get model info for %s: %s", name, e)
         return
 
+    # Get config using factory function
+    prefix = "settings" if is_pydantic_settings(obj) else "model"
+    config = config_from_sphinx(app, prefix)
+
     # Add field summary if configured
-    show_field_summary = getattr(
-        app.config, "sphinxcontrib_pydantic_model_show_field_summary", True
-    )
-    if show_field_summary and model_info.field_names:
-        _add_field_summary(obj, model_info, app, lines)
+    if config.show_field_summary and model_info.field_names:
+        _add_field_summary(obj, model_info, config, lines)
 
     # Add validator summary if configured
-    show_validator_summary = getattr(
-        app.config, "sphinxcontrib_pydantic_model_show_validator_summary", True
-    )
     validators = list(model_info.validator_names) + list(
         model_info.model_validator_names
     )
-    if show_validator_summary and validators:
-        _add_validator_summary(obj, model_info, validators, app, lines)
-
-    # Add detailed field documentation if configured
-    show_field_doc = getattr(
-        app.config, "sphinxcontrib_pydantic_model_show_field_doc", True
-    )
-    # Skip for RootModel (already displayed as "Root Type")
-    is_root = model_info.is_root_model and len(model_info.field_names) == 1
-    if show_field_doc and model_info.field_names and not is_root:
-        field_doc_lines = _generate_field_documentation(obj, model_info, app)
-        if field_doc_lines:
-            lines.extend(field_doc_lines)
+    if config.show_validator_summary and validators:
+        _add_validator_summary(obj, model_info, validators, config, lines)
 
 
 def _process_attribute_docstring(
@@ -299,7 +284,13 @@ def _process_attribute_docstring(
     options: dict[str, Any],
     lines: list[str],
 ) -> None:
-    """Process attribute docstring to add 'Validated by' section for fields."""
+    """Process attribute docstring to enhance Pydantic field documentation.
+
+    This adds the following to field attribute docstrings:
+    - Field description from Field(description=...) if no docstring exists
+    - Constraints section if field has validation constraints
+    - "Validated by" section listing validators that affect this field
+    """
     # Parse the fully qualified name to get model path and field name
     parts = name.rsplit(".", 1)
     if len(parts) != 2:
@@ -325,25 +316,45 @@ def _process_attribute_docstring(
     if field_name not in model.model_fields:
         return
 
+    # Get field information
+    try:
+        field_info = get_field_info(model, field_name)
+    except Exception:
+        return
+
+    # Add description if lines are empty and field has description
+    if not lines and field_info.description:
+        lines.append(field_info.description)
+
+    # Add constraints section if field has constraints
+    show_constraints = getattr(
+        app.config, "sphinxcontrib_pydantic_field_show_constraints", True
+    )
+    if show_constraints and field_info.constraints:
+        if lines:
+            lines.append("")
+        lines.append(":Constraints:")
+        for key, value in field_info.constraints.items():
+            lines.append(f"   - **{key}** = ``{value}``")
+
     # Get validators for this field
     mappings = get_validator_field_mappings(model)
     field_mappings = filter_mappings_by_field(mappings, field_name)
 
-    if not field_mappings:
-        return
-
-    # Add "Validated by" section
-    lines.append("")
-    lines.append(":Validated by:")
-    for mapping in sorted(field_mappings, key=lambda m: m.validator_name):
-        ref = create_role_reference(mapping.validator_name, mapping.validator_ref)
-        lines.append(f"   {ref}")
+    # Add "Validated by" section if there are validators
+    if field_mappings:
+        if lines:
+            lines.append("")
+        lines.append(":Validated by:")
+        for mapping in sorted(field_mappings, key=lambda m: m.validator_name):
+            ref = create_role_reference(mapping.validator_name, mapping.validator_ref)
+            lines.append(f"   {ref}")
 
 
 def _add_field_summary(
     model: type,
     model_info: Any,
-    app: Sphinx,
+    config: GeneratorConfig,
     lines: list[str],
 ) -> None:
     """Add field summary table to docstring lines.
@@ -357,8 +368,8 @@ def _add_field_summary(
         The Pydantic model class.
     model_info : ModelInfo
         Information about the model.
-    app : Sphinx
-        The Sphinx application.
+    config : GeneratorConfig
+        The generator configuration.
     lines : list[str]
         The docstring lines to modify.
     """
@@ -373,25 +384,13 @@ def _add_field_summary(
             summary_lines = generate_root_type_line(fields[0])
         else:
             # Regular field summary table
-            show_alias = getattr(
-                app.config, "sphinxcontrib_pydantic_field_show_alias", True
-            )
-            show_default = getattr(
-                app.config, "sphinxcontrib_pydantic_field_show_default", True
-            )
-            show_required = getattr(
-                app.config, "sphinxcontrib_pydantic_field_show_required", True
-            )
-            show_constraints = getattr(
-                app.config, "sphinxcontrib_pydantic_field_show_constraints", True
-            )
             summary_lines = generate_field_summary_table(
                 fields,
                 model_path,
-                show_alias=show_alias,
-                show_default=show_default,
-                show_required=show_required,
-                show_constraints=show_constraints,
+                show_alias=config.field_show_alias,
+                show_default=config.field_show_default,
+                show_required=config.field_show_required,
+                show_constraints=config.field_show_constraints,
             )
 
         if summary_lines:
@@ -405,7 +404,7 @@ def _add_validator_summary(
     model: type,
     model_info: Any,
     validator_names: list[str],
-    app: Sphinx,
+    config: GeneratorConfig,
     lines: list[str],
 ) -> None:
     """Add validator summary table to docstring lines.
@@ -418,15 +417,11 @@ def _add_validator_summary(
         Information about the model.
     validator_names : list[str]
         Names of validators to include.
-    app : Sphinx
-        The Sphinx application.
+    config : GeneratorConfig
+        The generator configuration.
     lines : list[str]
         The docstring lines to modify.
     """
-    list_fields = getattr(
-        app.config, "sphinxcontrib_pydantic_validator_list_fields", True
-    )
-
     # Build model path for cross-references
     model_path = f"{model.__module__}.{model.__name__}"
 
@@ -435,96 +430,13 @@ def _add_validator_summary(
         summary_lines = generate_validator_summary_table(
             validators,
             model_path,
-            list_fields=list_fields,
+            list_fields=config.validator_list_fields,
         )
         if summary_lines:
             lines.append("")
             lines.extend(summary_lines)
     except Exception as e:
         _logger.warning("Failed to generate validator summary: %s", e)
-
-
-def _generate_field_documentation(
-    model: type,
-    model_info: Any,
-    app: Sphinx,
-) -> list[str]:
-    """Generate detailed field documentation for a Pydantic model.
-
-    Generates RST directives for each field with description,
-    constraints, and validators.
-
-    Parameters
-    ----------
-    model : type
-        The Pydantic model class.
-    model_info : ModelInfo
-        Information about the model.
-    app : Sphinx
-        The Sphinx application.
-
-    Returns
-    -------
-    list[str]
-        RST lines for detailed field documentation.
-    """
-    lines: list[str] = []
-
-    # Get validator mappings
-    mappings = get_validator_field_mappings(model)
-
-    for field_name in model_info.field_names:
-        try:
-            field = get_field_info(model, field_name)
-        except Exception:
-            continue
-
-        # Generate field directive
-        lines.append("")
-        lines.append(f".. py:pydantic_field:: {field_name}")
-
-        if field.is_required:
-            lines.append("   :required:")
-        else:
-            lines.append("   :optional:")
-
-        # Add type annotation
-        type_str = format_type_annotation(field.annotation)
-        lines.append(f"   :type: {type_str}")
-
-        # Add default value
-        if field.has_default:
-            default_str = format_default_value(field.default)
-            lines.append(f"   :value: {default_str}")
-        elif field.has_default_factory:
-            lines.append("   :value: *factory*")
-
-        lines.append("")
-
-        # Add field description
-        if field.description:
-            lines.append(f"   {field.description}")
-            lines.append("")
-
-        # Add constraints
-        if field.constraints:
-            lines.append("   :Constraints:")
-            for key, value in field.constraints.items():
-                lines.append(f"      - **{key}** = {value}")
-            lines.append("")
-
-        # Add validators
-        field_mappings = filter_mappings_by_field(mappings, field_name)
-        if field_mappings:
-            lines.append("   :Validated by:")
-            for mapping in sorted(field_mappings, key=lambda m: m.validator_name):
-                ref = create_role_reference(
-                    mapping.validator_name, mapping.validator_ref
-                )
-                lines.append(f"      {ref}")
-            lines.append("")
-
-    return lines
 
 
 def autodoc_process_signature(
@@ -567,15 +479,11 @@ def autodoc_process_signature(
     if what != "class" or not is_pydantic_model(obj):
         return None
 
-    # Check if we should hide the parameter list
-    if is_pydantic_settings(obj):
-        hide = getattr(
-            app.config, "sphinxcontrib_pydantic_settings_hide_paramlist", True
-        )
-    else:
-        hide = getattr(app.config, "sphinxcontrib_pydantic_model_hide_paramlist", True)
+    # Get config using factory function
+    prefix = "settings" if is_pydantic_settings(obj) else "model"
+    config = config_from_sphinx(app, prefix)
 
-    if hide:
+    if config.hide_paramlist:
         return ("", return_annotation)  # Empty signature
 
     return None  # Use default signature

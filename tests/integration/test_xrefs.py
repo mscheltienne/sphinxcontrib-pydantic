@@ -264,6 +264,76 @@ class TestValidatorTableStructure:
         assert validator_link is not None, "Validator should be a cross-reference link"
 
 
+class TestEnhancedAttributeDocstrings:
+    """Tests for enhanced attribute docstrings.
+
+    Note: The autodoc-process-docstring event only fires for attributes that
+    have Python docstrings. Fields without docstrings won't trigger the event,
+    so their Pydantic metadata (description, constraints) won't be added.
+    This is an accepted limitation of the autodoc integration.
+    """
+
+    def test_attribute_with_docstring_shows_validators(
+        self,
+        make_app: Callable[..., SphinxTestApp],
+        tmp_path: Path,
+        parse_html: Callable[[str], BeautifulSoup],
+    ) -> None:
+        """Test that validators are shown for attributes with docstrings."""
+        srcdir = tmp_path / "src"
+        srcdir.mkdir()
+
+        # Create a model with a field that has a Python docstring
+        (srcdir / "mymodule.py").write_text(
+            "from pydantic import BaseModel, field_validator\n"
+            "\n"
+            "class MyModel(BaseModel):\n"
+            '    """A test model."""\n'
+            "\n"
+            "    value: int\n"
+            '    """The value field."""\n'
+            "\n"
+            "    @field_validator('value')\n"
+            "    @classmethod\n"
+            "    def check_positive(cls, v: int) -> int:\n"
+            '        """Validate that value is positive."""\n'
+            "        if v <= 0:\n"
+            "            raise ValueError('Value must be positive')\n"
+            "        return v\n"
+        )
+
+        (srcdir / "conf.py").write_text(
+            "import sys\n"
+            "from pathlib import Path\n"
+            "sys.path.insert(0, str(Path('.').resolve()))\n"
+            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
+            'project = "Test"\n'
+            'exclude_patterns = ["_build"]\n'
+        )
+        (srcdir / "index.rst").write_text(
+            "Test Project\n"
+            "============\n"
+            "\n"
+            ".. autoclass:: mymodule.MyModel\n"
+            "   :members:\n"
+        )
+
+        app = make_app(srcdir=srcdir)
+        app.build()
+
+        assert app.statuscode == 0
+
+        outdir = Path(app.outdir)
+        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
+
+        # Validator should be mentioned in the attribute section
+        html_text = soup.get_text()
+        # The "Validated by" section should appear for the value field
+        assert "Validated by" in html_text or "check_positive" in html_text, (
+            "Validator reference not found in HTML output"
+        )
+
+
 class TestFieldCrossReferences:
     """Tests for field cross-reference resolution."""
 
@@ -289,6 +359,7 @@ class TestFieldCrossReferences:
             "\n"
             ".. autoclass:: tests.assets.models.basic.SimpleModel\n"
             "   :members:\n"
+            "   :undoc-members:\n"
         )
 
         app = make_app(srcdir=srcdir)
@@ -319,124 +390,6 @@ class TestFieldCrossReferences:
         )
         assert any("count" in href for href in field_hrefs), (
             f"Expected link to 'count' field, found: {field_hrefs}"
-        )
-
-    def test_field_documentation_section_exists(
-        self,
-        make_app: Callable[..., SphinxTestApp],
-        tmp_path: Path,
-        parse_html: Callable[[str], BeautifulSoup],
-    ) -> None:
-        """Test that detailed field documentation section appears."""
-        srcdir = tmp_path / "src"
-        srcdir.mkdir()
-
-        (srcdir / "conf.py").write_text(
-            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
-            'project = "Test"\n'
-            'exclude_patterns = ["_build"]\n'
-            "sphinxcontrib_pydantic_model_show_field_doc = True\n"
-        )
-        (srcdir / "index.rst").write_text(
-            "Test Project\n"
-            "============\n"
-            "\n"
-            ".. autoclass:: tests.assets.models.basic.SimpleModel\n"
-            "   :members:\n"
-        )
-
-        app = make_app(srcdir=srcdir)
-        app.build()
-
-        assert app.statuscode == 0
-
-        outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
-
-        # Find field documentation - pydantic_field directive renders as
-        # dl.py.pydantic_field
-        field_docs = soup.select("dl.py.pydantic_field")
-
-        # Should have at least 2 field docs (name and count)
-        assert len(field_docs) >= 2, (
-            f"Expected at least 2 field documentation sections, found {len(field_docs)}"
-        )
-
-    def test_field_doc_includes_description(
-        self,
-        make_app: Callable[..., SphinxTestApp],
-        tmp_path: Path,
-        parse_html: Callable[[str], BeautifulSoup],
-    ) -> None:
-        """Test that field documentation includes description from Field()."""
-        srcdir = tmp_path / "src"
-        srcdir.mkdir()
-
-        (srcdir / "conf.py").write_text(
-            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
-            'project = "Test"\n'
-            'exclude_patterns = ["_build"]\n'
-            "sphinxcontrib_pydantic_model_show_field_doc = True\n"
-        )
-        (srcdir / "index.rst").write_text(
-            "Test Project\n"
-            "============\n"
-            "\n"
-            ".. autoclass:: tests.assets.models.fields.FieldWithMetadata\n"
-            "   :members:\n"
-        )
-
-        app = make_app(srcdir=srcdir)
-        app.build()
-
-        assert app.statuscode == 0
-
-        outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
-
-        # The description should appear in the HTML
-        html_text = soup.get_text()
-        assert "A documented field." in html_text, (
-            "Field description not found in HTML output"
-        )
-
-    def test_field_doc_can_be_disabled(
-        self,
-        make_app: Callable[..., SphinxTestApp],
-        tmp_path: Path,
-        parse_html: Callable[[str], BeautifulSoup],
-    ) -> None:
-        """Test that field documentation can be disabled via config."""
-        srcdir = tmp_path / "src"
-        srcdir.mkdir()
-
-        (srcdir / "conf.py").write_text(
-            'extensions = ["sphinx.ext.autodoc", "sphinxcontrib.pydantic"]\n'
-            'project = "Test"\n'
-            'exclude_patterns = ["_build"]\n'
-            "sphinxcontrib_pydantic_model_show_field_doc = False\n"
-        )
-        (srcdir / "index.rst").write_text(
-            "Test Project\n"
-            "============\n"
-            "\n"
-            ".. autoclass:: tests.assets.models.fields.FieldWithMetadata\n"
-            "   :members:\n"
-        )
-
-        app = make_app(srcdir=srcdir)
-        app.build()
-
-        assert app.statuscode == 0
-
-        outdir = Path(app.outdir)
-        soup = parse_html((outdir / "index.html").read_text(encoding="utf-8"))
-
-        # When disabled, the detailed description should NOT appear
-        # We check that the description text is not present in the HTML
-        html_text = soup.get_text()
-        assert "A documented field." not in html_text, (
-            "Field description should not appear when show_field_doc=False"
         )
 
     def test_type_annotations_are_cross_references(

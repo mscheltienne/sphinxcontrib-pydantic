@@ -26,18 +26,18 @@ class PydanticFieldDirective(PyAttribute):
     """
 
     option_spec: ClassVar[OptionSpec] = PyAttribute.option_spec.copy()
-    option_spec.update({
-        "required": directives.flag,
-        "optional": directives.flag,
-    })
+    option_spec.update(
+        {
+            "required": directives.flag,
+            "optional": directives.flag,
+        }
+    )
 
     def get_signature_prefix(self, sig: str) -> Sequence[Node]:
         """Return 'field' prefix for the signature."""
         return [addnodes.desc_sig_keyword("", "field"), addnodes.desc_sig_space()]
 
-    def handle_signature(
-        self, sig: str, signode: desc_signature
-    ) -> tuple[str, str]:
+    def handle_signature(self, sig: str, signode: desc_signature) -> tuple[str, str]:
         """Handle the field signature, adding [Required]/[Optional] markers."""
         fullname, prefix = super().handle_signature(sig, signode)
 
