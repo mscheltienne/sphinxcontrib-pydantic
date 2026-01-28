@@ -51,7 +51,6 @@ class TestConfigRegistration:
         assert hasattr(
             app.config, "sphinxcontrib_pydantic_model_show_validator_summary"
         )
-        assert hasattr(app.config, "sphinxcontrib_pydantic_model_show_config")
         assert hasattr(app.config, "sphinxcontrib_pydantic_model_signature_prefix")
 
     def test_field_config_options_registered(
@@ -84,7 +83,6 @@ class TestConfigRegistration:
         assert hasattr(
             app.config, "sphinxcontrib_pydantic_settings_show_validator_summary"
         )
-        assert hasattr(app.config, "sphinxcontrib_pydantic_settings_show_config")
         assert hasattr(app.config, "sphinxcontrib_pydantic_settings_signature_prefix")
 
     def test_default_values_are_set(
@@ -97,7 +95,6 @@ class TestConfigRegistration:
         assert app.config.sphinxcontrib_pydantic_model_show_json is False
         assert app.config.sphinxcontrib_pydantic_model_show_field_summary is True
         assert app.config.sphinxcontrib_pydantic_model_show_validator_summary is True
-        assert app.config.sphinxcontrib_pydantic_model_show_config is False
         assert app.config.sphinxcontrib_pydantic_model_signature_prefix == "model"
 
         # Field defaults

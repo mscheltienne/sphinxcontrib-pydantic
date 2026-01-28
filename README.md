@@ -101,27 +101,26 @@ All options use the `sphinxcontrib_pydantic_` prefix in `conf.py`, e.g.
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `sphinxcontrib_pydantic_model_show_json` | `False` | Show JSON schema for the model |
-| `sphinxcontrib_pydantic_model_show_field_summary` | `True` | Show summary table of fields |
-| `sphinxcontrib_pydantic_model_show_validator_summary` | `True` | Show summary table of validators |
-| `sphinxcontrib_pydantic_model_show_config` | `False` | Show model configuration |
-| `sphinxcontrib_pydantic_model_signature_prefix` | `"model"` | Prefix shown before model name |
-| `sphinxcontrib_pydantic_model_hide_paramlist` | `True` | Hide `__init__` parameter list |
+| `model_show_json` | `False` | Show JSON schema for the model |
+| `model_show_field_summary` | `True` | Show summary table of fields |
+| `model_show_validator_summary` | `True` | Show summary table of validators |
+| `model_signature_prefix` | `"model"` | Prefix shown before model name |
+| `model_hide_paramlist` | `True` | Hide `__init__` parameter list |
 
 ### Field Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `sphinxcontrib_pydantic_field_show_alias` | `True` | Show field aliases |
-| `sphinxcontrib_pydantic_field_show_default` | `True` | Show default values |
-| `sphinxcontrib_pydantic_field_show_required` | `True` | Show required status |
-| `sphinxcontrib_pydantic_field_show_constraints` | `True` | Show field constraints (e.g., `min_length`) |
+| `field_show_alias` | `True` | Show field aliases |
+| `field_show_default` | `True` | Show default values |
+| `field_show_required` | `True` | Show required status |
+| `field_show_constraints` | `True` | Show field constraints (e.g., `min_length`) |
 
 ### Validator Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `sphinxcontrib_pydantic_validator_list_fields` | `True` | List fields affected by each validator |
+| `validator_list_fields` | `True` | List fields affected by each validator |
 
 ### Settings Options
 
@@ -131,12 +130,11 @@ model counterparts.
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `sphinxcontrib_pydantic_settings_show_json` | `False` | Show JSON schema for the setting |
-| `sphinxcontrib_pydantic_settings_show_field_summary` | `True` | Show summary table of fields |
-| `sphinxcontrib_pydantic_settings_show_validator_summary` | `True` | Show summary table of validators |
-| `sphinxcontrib_pydantic_settings_show_config` | `False` | Show setting configuration |
-| `sphinxcontrib_pydantic_settings_signature_prefix` | `"model"` | Prefix shown before setting name |
-| `sphinxcontrib_pydantic_settings_hide_paramlist` | `True` | Hide `__init__` parameter list |
+| `settings_show_json` | `False` | Show JSON schema for the setting |
+| `settings_show_field_summary` | `True` | Show summary table of fields |
+| `settings_show_validator_summary` | `True` | Show summary table of validators |
+| `settings_signature_prefix` | `"settings"` | Prefix shown before setting name |
+| `settings_hide_paramlist` | `True` | Hide `__init__` parameter list |
 
 ### Example Configuration
 

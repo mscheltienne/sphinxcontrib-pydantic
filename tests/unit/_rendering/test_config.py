@@ -32,7 +32,6 @@ class TestGeneratorConfig:
             show_field_summary=True,
             show_validator_summary=True,
             show_json=False,
-            show_config=False,
             field_show_alias=True,
             field_show_default=True,
             field_show_required=True,
@@ -50,7 +49,6 @@ class TestGeneratorConfig:
             show_field_summary=True,
             show_validator_summary=False,
             show_json=True,
-            show_config=False,
             field_show_alias=True,
             field_show_default=False,
             field_show_required=True,
@@ -63,7 +61,6 @@ class TestGeneratorConfig:
         assert config.show_field_summary is True
         assert config.show_validator_summary is False
         assert config.show_json is True
-        assert config.show_config is False
         assert config.field_show_alias is True
         assert config.field_show_default is False
         assert config.field_show_required is True
@@ -123,7 +120,6 @@ class TestConfigFromSphinx:
         assert config.show_field_summary is True
         assert config.show_validator_summary is True
         assert config.show_json is False
-        assert config.show_config is False
         assert config.field_show_alias is True
         assert config.field_show_default is True
         assert config.field_show_required is True

@@ -64,7 +64,6 @@ class PydanticModelDirective(PydanticDirective):
         "show-json": flag_or_value,
         "show-field-summary": flag_or_value,
         "show-validator-summary": flag_or_value,
-        "show-config": flag_or_value,
         # Member options
         "members": directives.unchanged,
         "inherited-members": directives.unchanged,
