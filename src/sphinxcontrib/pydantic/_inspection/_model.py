@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from pydantic_settings import BaseSettings
+
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
@@ -27,14 +29,8 @@ def is_pydantic_settings(obj: Any) -> bool:
     Notes
     -----
     This function checks if the object is a class (not an instance) that
-    inherits from ``pydantic_settings.BaseSettings``. Returns False if
-    pydantic-settings is not installed.
+    inherits from ``pydantic_settings.BaseSettings``.
     """
-    try:
-        from pydantic_settings import BaseSettings
-    except ImportError:
-        return False
-
     try:
         return isinstance(obj, type) and issubclass(obj, BaseSettings)
     except TypeError:

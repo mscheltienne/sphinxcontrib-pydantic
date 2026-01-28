@@ -23,12 +23,6 @@ inspiration as well as the source code of `sphinx` and `pydantic` as documentati
 pip install sphinxcontrib-pydantic
 ```
 
-For `pydantic-settings` support:
-
-```bash
-pip install sphinxcontrib-pydantic[settings]
-```
-
 ## Configuration
 
 Enable the extension in your `conf.py`:
