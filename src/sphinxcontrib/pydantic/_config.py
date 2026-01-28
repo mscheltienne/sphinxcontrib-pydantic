@@ -18,6 +18,7 @@ _CONFIG_OPTIONS: list[tuple[str, object, str]] = [
     ("sphinxcontrib_pydantic_model_show_json", False, "html"),
     ("sphinxcontrib_pydantic_model_show_field_summary", True, "html"),
     ("sphinxcontrib_pydantic_model_show_validator_summary", True, "html"),
+    ("sphinxcontrib_pydantic_model_show_members", True, "html"),
     ("sphinxcontrib_pydantic_model_signature_prefix", "model", "html"),
     ("sphinxcontrib_pydantic_model_hide_paramlist", True, "html"),
     # Field options
@@ -31,6 +32,7 @@ _CONFIG_OPTIONS: list[tuple[str, object, str]] = [
     ("sphinxcontrib_pydantic_settings_show_json", False, "html"),
     ("sphinxcontrib_pydantic_settings_show_field_summary", True, "html"),
     ("sphinxcontrib_pydantic_settings_show_validator_summary", True, "html"),
+    ("sphinxcontrib_pydantic_settings_show_members", True, "html"),
     ("sphinxcontrib_pydantic_settings_signature_prefix", "settings", "html"),
     ("sphinxcontrib_pydantic_settings_hide_paramlist", True, "html"),
 ]

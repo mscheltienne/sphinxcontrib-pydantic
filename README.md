@@ -104,12 +104,14 @@ All options use the `sphinxcontrib_pydantic_` prefix in `conf.py`, e.g.
 | `model_show_json` | `False` | Show JSON schema for the model |
 | `model_show_field_summary` | `True` | Show summary table of fields |
 | `model_show_validator_summary` | `True` | Show summary table of validators |
+| `model_show_members` | `True` | Show individual field/validator documentation (directives only) |
 | `model_signature_prefix` | `"model"` | Prefix shown before model name (directives only) |
 | `model_hide_paramlist` | `True` | Hide `__init__` parameter list |
 
-> **Note**: The `signature_prefix` option only affects directive-based documentation
-> (`pydantic-model`, `pydantic-settings`). When using autodoc (`autoclass`, `automodule`),
-> the standard "class" prefix is used.
+> **Note**: The `signature_prefix` and `show_members` options only affect directive-based
+> documentation (`pydantic-model`, `pydantic-settings`). When using autodoc
+> (`autoclass`, `automodule`), the standard "class" prefix is used and members are
+> documented via autodoc's member processing.
 
 ### Field Options
 
@@ -137,6 +139,7 @@ model counterparts.
 | `settings_show_json` | `False` | Show JSON schema for the setting |
 | `settings_show_field_summary` | `True` | Show summary table of fields |
 | `settings_show_validator_summary` | `True` | Show summary table of validators |
+| `settings_show_members` | `True` | Show individual field/validator documentation (directives only) |
 | `settings_signature_prefix` | `"settings"` | Prefix shown before setting name (directives only) |
 | `settings_hide_paramlist` | `True` | Hide `__init__` parameter list |
 

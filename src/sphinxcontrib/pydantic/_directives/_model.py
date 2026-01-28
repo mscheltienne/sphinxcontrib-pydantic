@@ -15,14 +15,18 @@ from sphinxcontrib.pydantic._directives._base import PydanticDirective, flag_or_
 from sphinxcontrib.pydantic._inspection import (
     FieldInfo,
     ValidatorInfo,
+    filter_mappings_by_field,
     get_field_info,
     get_model_info,
+    get_validator_field_mappings,
     get_validator_info,
     is_pydantic_model,
 )
 from sphinxcontrib.pydantic._rendering import (
     GeneratorConfig,
     config_from_directive,
+    create_role_reference,
+    format_type_annotation,
     generate_field_summary_table,
     generate_validator_summary_table,
 )
@@ -64,6 +68,7 @@ class PydanticModelDirective(PydanticDirective):
         "show-json": flag_or_value,
         "show-field-summary": flag_or_value,
         "show-validator-summary": flag_or_value,
+        "show-members": flag_or_value,
         # Field display options
         "show-alias": flag_or_value,
         "show-default": flag_or_value,
@@ -206,22 +211,37 @@ class PydanticModelDirective(PydanticDirective):
         # Compute model path for cross-references
         model_path = f"{model_info.module}.{model_info.name}"
 
-        # Add field summary table
-        if config.show_field_summary and model_info.field_names:
+        # Collect field and validator info for summary tables and detailed docs
+        fields: list[FieldInfo] = []
+        if model_info.field_names:
             fields = [get_field_info(model, name) for name in model_info.field_names]
-            self._add_field_summary(fields, model_path, config, content)
 
-        # Add validator summary table
         validators = list(model_info.validator_names) + list(
             model_info.model_validator_names
         )
-        if config.show_validator_summary and validators:
+        validator_infos: list[ValidatorInfo] = []
+        if validators:
             validator_infos = [get_validator_info(model, name) for name in validators]
+
+        # Add field summary table
+        if config.show_field_summary and fields:
+            self._add_field_summary(fields, model_path, config, content)
+
+        # Add validator summary table
+        if config.show_validator_summary and validator_infos:
             self._add_validator_summary(validator_infos, model_path, config, content)
 
         # Add JSON schema if requested
         if config.show_json:
             self._add_json_schema(model, content)
+
+        # Add detailed field documentation (creates cross-reference targets)
+        if config.show_members and fields:
+            self._generate_field_docs(fields, model, model_path, config, content)
+
+        # Add detailed validator documentation (creates cross-reference targets)
+        if config.show_members and validator_infos:
+            self._generate_validator_docs(validator_infos, model_path, content)
 
         desc += content
         result.append(desc)
@@ -336,6 +356,213 @@ class PydanticModelDirective(PydanticDirective):
             parent += literal
         except Exception as e:
             _logger.warning("Failed to generate JSON schema: %s", e)
+
+    def _generate_field_docs(
+        self,
+        fields: list[FieldInfo],
+        model: type[BaseModel],
+        model_path: str,
+        config: GeneratorConfig,
+        parent: nodes.Element,
+    ) -> None:
+        """Generate detailed documentation for each field.
+
+        Creates individual field entries that serve as cross-reference targets
+        for the summary table links.
+
+        Parameters
+        ----------
+        fields : list[FieldInfo]
+            The fields to document.
+        model : type[BaseModel]
+            The Pydantic model class.
+        model_path : str
+            The fully qualified path to the model (e.g., ``module.ClassName``).
+        config : GeneratorConfig
+            The generator configuration.
+        parent : nodes.Element
+            The parent node to add content to.
+        """
+        # Get validator-field mappings for "Validated by" sections
+        mappings = get_validator_field_mappings(model)
+
+        for field in sorted(fields, key=lambda f: f.name):
+            # Create the field desc node
+            field_desc = addnodes.desc()
+            field_desc["domain"] = "py"
+            field_desc["objtype"] = "attribute"
+            field_desc["noindex"] = "noindex" in self.options
+
+            # Create the signature
+            sig = addnodes.desc_signature()
+            sig["module"] = model_path.rsplit(".", 1)[0] if "." in model_path else ""
+            sig["class"] = model_path.rsplit(".", 1)[-1]
+            sig["fullname"] = f"{model_path.rsplit('.', 1)[-1]}.{field.name}"
+
+            # Add "field" prefix
+            sig += addnodes.desc_sig_keyword("", "field")
+            sig += addnodes.desc_sig_space()
+
+            # Add field name
+            sig += addnodes.desc_name(field.name, field.name)
+
+            # Add type annotation
+            if field.annotation is not None:
+                sig += addnodes.desc_sig_punctuation("", ":")
+                sig += addnodes.desc_sig_space()
+                type_str = format_type_annotation(field.annotation, as_rst=False)
+                sig += addnodes.desc_sig_name("", type_str)
+
+            # Add [Required] or [Optional] marker
+            sig += addnodes.desc_sig_space()
+            if field.is_required:
+                sig += addnodes.desc_annotation("", "[Required]")
+            else:
+                sig += addnodes.desc_annotation("", "[Optional]")
+
+            # Register the field with Python domain for cross-referencing
+            if "noindex" not in self.options:
+                fullname = f"{model_path}.{field.name}"
+                node_id = make_id(self.env, self.state.document, "", fullname)
+                sig["ids"].append(node_id)
+                self.state.document.note_explicit_target(sig)
+
+                domain = self.env.domains.python_domain
+                domain.note_object(fullname, "attribute", node_id, location=sig)
+
+            field_desc += sig
+
+            # Create the content
+            field_content = addnodes.desc_content()
+
+            # Build RST content for the field
+            content_lines: list[str] = []
+
+            # Add description
+            if field.description:
+                content_lines.append(field.description)
+                content_lines.append("")
+
+            # Add constraints section
+            if config.field_show_constraints and field.constraints:
+                content_lines.append(":Constraints:")
+                for key, value in field.constraints.items():
+                    content_lines.append(f"   - **{key}** = ``{value}``")
+                content_lines.append("")
+
+            # Add "Validated by" section
+            field_mappings = filter_mappings_by_field(mappings, field.name)
+            if field_mappings:
+                content_lines.append(":Validated by:")
+                for mapping in sorted(field_mappings, key=lambda m: m.validator_name):
+                    ref = create_role_reference(
+                        mapping.validator_name, mapping.validator_ref
+                    )
+                    content_lines.append(f"   {ref}")
+                content_lines.append("")
+
+            # Parse the content lines into nodes
+            if content_lines:
+                string_list = StringList(content_lines)
+                self.state.nested_parse(string_list, 0, field_content)
+
+            field_desc += field_content
+            parent += field_desc
+
+    def _generate_validator_docs(
+        self,
+        validators: list[ValidatorInfo],
+        model_path: str,
+        parent: nodes.Element,
+    ) -> None:
+        """Generate detailed documentation for each validator.
+
+        Creates individual validator entries that serve as cross-reference targets
+        for the summary table links.
+
+        Parameters
+        ----------
+        validators : list[ValidatorInfo]
+            The validators to document.
+        model_path : str
+            The fully qualified path to the model (e.g., ``module.ClassName``).
+        parent : nodes.Element
+            The parent node to add content to.
+        """
+        for validator in sorted(validators, key=lambda v: v.name):
+            # Create the validator desc node
+            validator_desc = addnodes.desc()
+            validator_desc["domain"] = "py"
+            validator_desc["objtype"] = "method"
+            validator_desc["noindex"] = "noindex" in self.options
+
+            # Create the signature
+            sig = addnodes.desc_signature()
+            sig["module"] = model_path.rsplit(".", 1)[0] if "." in model_path else ""
+            sig["class"] = model_path.rsplit(".", 1)[-1]
+            sig["fullname"] = f"{model_path.rsplit('.', 1)[-1]}.{validator.name}"
+
+            # Add "validator" prefix
+            sig += addnodes.desc_sig_keyword("", "validator")
+            sig += addnodes.desc_sig_space()
+
+            # Add validator name
+            sig += addnodes.desc_name(validator.name, validator.name)
+
+            # Add mode in parentheses
+            sig += addnodes.desc_sig_punctuation("", "(")
+            sig += addnodes.desc_sig_name("", f"mode={validator.mode}")
+            sig += addnodes.desc_sig_punctuation("", ")")
+
+            # Register the validator with Python domain for cross-referencing
+            if "noindex" not in self.options:
+                fullname = f"{validator.defining_class_path}.{validator.name}"
+                node_id = make_id(self.env, self.state.document, "", fullname)
+                sig["ids"].append(node_id)
+                self.state.document.note_explicit_target(sig)
+
+                domain = self.env.domains.python_domain
+                domain.note_object(fullname, "method", node_id, location=sig)
+
+            validator_desc += sig
+
+            # Create the content
+            validator_content = addnodes.desc_content()
+
+            # Build RST content for the validator
+            content_lines: list[str] = []
+
+            # Add docstring
+            if validator.docstring:
+                content_lines.append(validator.docstring)
+                content_lines.append("")
+
+            # Add fields section for field validators
+            if validator.fields and not validator.is_model_validator:
+                content_lines.append(":Validates:")
+                for field_name in validator.fields:
+                    if field_name == "*":
+                        content_lines.append("   all fields")
+                    else:
+                        field_path = validator.field_class_paths.get(
+                            field_name, model_path
+                        )
+                        ref = create_role_reference(
+                            field_name, f"{field_path}.{field_name}"
+                        )
+                        content_lines.append(f"   {ref}")
+                content_lines.append("")
+            elif validator.is_model_validator:
+                content_lines.append(":Validates: entire model")
+                content_lines.append("")
+
+            # Parse the content lines into nodes
+            if content_lines:
+                string_list = StringList(content_lines)
+                self.state.nested_parse(string_list, 0, validator_content)
+
+            validator_desc += validator_content
+            parent += validator_desc
 
 
 class AutoPydanticModelDirective(PydanticModelDirective):

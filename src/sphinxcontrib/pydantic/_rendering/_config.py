@@ -31,6 +31,9 @@ class GeneratorConfig:
         Whether to show the validator summary table.
     show_json : bool
         Whether to show the JSON schema.
+    show_members : bool
+        Whether to show individual field/validator documentation
+        (creates cross-reference targets for summary table links).
     field_show_alias : bool
         Whether to show field aliases in the summary table.
     field_show_default : bool
@@ -51,6 +54,7 @@ class GeneratorConfig:
     show_field_summary: bool
     show_validator_summary: bool
     show_json: bool
+    show_members: bool
 
     # Field display options
     field_show_alias: bool
@@ -98,6 +102,7 @@ def config_from_sphinx(app: Sphinx, prefix: str = "model") -> GeneratorConfig:
         show_field_summary=get("show_field_summary", True),
         show_validator_summary=get("show_validator_summary", True),
         show_json=get("show_json", False),
+        show_members=get("show_members", True),
         field_show_alias=get_field("show_alias", True),
         field_show_default=get_field("show_default", True),
         field_show_required=get_field("show_required", True),
@@ -160,6 +165,7 @@ def config_from_directive(
             "show-validator-summary", "show_validator_summary", True
         ),
         show_json=get("show-json", "show_json", False),
+        show_members=get("show-members", "show_members", True),
         field_show_alias=get_field("show-alias", "show_alias", True),
         field_show_default=get_field("show-default", "show_default", True),
         field_show_required=get_field("show-required", "show_required", True),

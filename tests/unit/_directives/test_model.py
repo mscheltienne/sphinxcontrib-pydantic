@@ -25,6 +25,7 @@ class TestPydanticModelDirective:
         assert "show-json" in spec
         assert "show-field-summary" in spec
         assert "show-validator-summary" in spec
+        assert "show-members" in spec
 
     def test_options_use_flag_or_value(self) -> None:
         """Model-specific options use flag_or_value converter."""
@@ -32,6 +33,7 @@ class TestPydanticModelDirective:
         assert spec["show-json"] == flag_or_value
         assert spec["show-field-summary"] == flag_or_value
         assert spec["show-validator-summary"] == flag_or_value
+        assert spec["show-members"] == flag_or_value
 
     def test_has_members_option(self) -> None:
         """Directive has members option for autodoc-like behavior."""
