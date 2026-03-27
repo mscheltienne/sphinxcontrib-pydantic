@@ -36,7 +36,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync -q --no-default-groups --group test
       - run: pytest tests --cov=sphinxcontrib.pydantic --cov-report=xml --cov-config=pyproject.toml
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         if: ${{ github.repository == 'mscheltienne/sphinxcontrib-pydantic' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -63,7 +63,7 @@ jobs:
           uv pip install -q --upgrade --prerelease allow git+https://github.com/pydantic/pydantic
           uv pip install -q --upgrade --prerelease allow git+https://github.com/sphinx-doc/sphinx
       - run: pytest tests --cov=template --cov-report=xml --cov-config=pyproject.toml
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         if: ${{ github.repository == 'mscheltienne/sphinxcontrib-pydantic' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
