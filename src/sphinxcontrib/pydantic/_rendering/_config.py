@@ -65,6 +65,9 @@ class GeneratorConfig:
     # Validator display options
     validator_list_fields: bool
 
+    # Member visibility
+    show_private_members: bool
+
     # Signature options
     signature_prefix: str
     hide_paramlist: bool
@@ -108,6 +111,7 @@ def config_from_sphinx(app: Sphinx, prefix: str = "model") -> GeneratorConfig:
         field_show_required=get_field("show_required", True),
         field_show_constraints=get_field("show_constraints", True),
         validator_list_fields=get_validator("list_fields", True),
+        show_private_members=get("show_private_members", False),
         signature_prefix=get("signature_prefix", prefix),
         hide_paramlist=get("hide_paramlist", True),
     )
@@ -171,6 +175,9 @@ def config_from_directive(
         field_show_required=get_field("show-required", "show_required", True),
         field_show_constraints=get_field("show-constraints", "show_constraints", True),
         validator_list_fields=get_validator("list-fields", "list_fields", True),
+        show_private_members=get(
+            "show-private-members", "show_private_members", False
+        ),
         signature_prefix=get("signature-prefix", "signature_prefix", prefix),
         hide_paramlist=get("hide-paramlist", "hide_paramlist", True),
     )

@@ -38,6 +38,7 @@ class TestGeneratorConfig:
             field_show_required=True,
             field_show_constraints=True,
             validator_list_fields=True,
+            show_private_members=False,
             signature_prefix="model",
             hide_paramlist=True,
         )
@@ -56,6 +57,7 @@ class TestGeneratorConfig:
             field_show_required=True,
             field_show_constraints=False,
             validator_list_fields=True,
+            show_private_members=True,
             signature_prefix="settings",
             hide_paramlist=False,
         )
@@ -69,6 +71,7 @@ class TestGeneratorConfig:
         assert config.field_show_required is True
         assert config.field_show_constraints is False
         assert config.validator_list_fields is True
+        assert config.show_private_members is True
         assert config.signature_prefix == "settings"
         assert config.hide_paramlist is False
 
@@ -129,6 +132,7 @@ class TestConfigFromSphinx:
         assert config.field_show_required is True
         assert config.field_show_constraints is True
         assert config.validator_list_fields is True
+        assert config.show_private_members is False
         assert config.hide_paramlist is True
 
     def test_signature_prefix_defaults_to_prefix(self) -> None:

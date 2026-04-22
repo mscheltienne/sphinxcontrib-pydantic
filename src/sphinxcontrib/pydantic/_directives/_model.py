@@ -85,6 +85,7 @@ class PydanticModelDirective(PydanticDirective):
         "members": directives.unchanged,
         "inherited-members": directives.unchanged,
         "undoc-members": directives.flag,
+        "show-private-members": flag_or_value,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -213,14 +214,20 @@ class PydanticModelDirective(PydanticDirective):
         # Compute model path for cross-references
         model_path = f"{model_info.module}.{model_info.name}"
 
-        # Collect field and validator info for summary tables and detailed docs
+        # Collect field and validator info for summary tables and detailed docs.
+        # Filter out private members (names starting with "_") when configured.
+        field_names = model_info.field_names
+        if not config.show_private_members:
+            field_names = tuple(n for n in field_names if not n.startswith("_"))
         fields: list[FieldInfo] = []
-        if model_info.field_names:
-            fields = [get_field_info(model, name) for name in model_info.field_names]
+        if field_names:
+            fields = [get_field_info(model, name) for name in field_names]
 
         validators = list(model_info.validator_names) + list(
             model_info.model_validator_names
         )
+        if not config.show_private_members:
+            validators = [n for n in validators if not n.startswith("_")]
         validator_infos: list[ValidatorInfo] = []
         if validators:
             validator_infos = [get_validator_info(model, name) for name in validators]
@@ -468,8 +475,12 @@ class PydanticModelDirective(PydanticDirective):
                     content_lines.append(f"   - **{key}** = ``{value}``")
                 content_lines.append("")
 
-            # Add "Validated by" section
+            # Add "Validated by" section (filter private validators)
             field_mappings = filter_mappings_by_field(mappings, field.name)
+            if not config.show_private_members:
+                field_mappings = [
+                    m for m in field_mappings if not m.validator_name.startswith("_")
+                ]
             if field_mappings:
                 content_lines.append(":Validated by:")
                 for mapping in sorted(field_mappings, key=lambda m: m.validator_name):

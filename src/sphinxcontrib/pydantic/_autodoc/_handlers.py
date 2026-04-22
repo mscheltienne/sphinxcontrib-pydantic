@@ -270,10 +270,12 @@ def _process_class_docstring(
     if config.show_field_summary and model_info.field_names:
         _add_field_summary(obj, model_info, config, lines)
 
-    # Add validator summary if configured
+    # Add validator summary if configured (filter private if needed)
     validators = list(model_info.validator_names) + list(
         model_info.model_validator_names
     )
+    if not config.show_private_members:
+        validators = [n for n in validators if not n.startswith("_")]
     if config.show_validator_summary and validators:
         _add_validator_summary(obj, model_info, validators, config, lines)
 
@@ -344,9 +346,16 @@ def _process_attribute_docstring(
         for key, value in field_info.constraints.items():
             lines.append(f"   - **{key}** = ``{value}``")
 
-    # Get validators for this field
+    # Get validators for this field (filter private if configured)
     mappings = get_validator_field_mappings(model)
     field_mappings = filter_mappings_by_field(mappings, field_name)
+    show_private = getattr(
+        app.config, "sphinxcontrib_pydantic_model_show_private_members", False
+    )
+    if not show_private:
+        field_mappings = [
+            m for m in field_mappings if not m.validator_name.startswith("_")
+        ]
 
     # Add "Validated by" section if there are validators
     if field_mappings:
