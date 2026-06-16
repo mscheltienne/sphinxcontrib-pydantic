@@ -38,6 +38,10 @@ _CONFIG_OPTIONS: list[tuple[str, object, str]] = [
     ("sphinxcontrib_pydantic_settings_signature_prefix", "settings", "html"),
     ("sphinxcontrib_pydantic_settings_hide_paramlist", True, "html"),
     ("sphinxcontrib_pydantic_settings_show_private_members", False, "html"),
+    # Interoperability: resolve cross-references into ``objects.inv`` files
+    # produced by the legacy ``autodoc_pydantic`` extension (see ``_compat``).
+    # 'env' rebuild as it affects cross-reference resolution.
+    ("sphinxcontrib_pydantic_resolve_legacy_inventories", False, "env"),
 ]
 
 

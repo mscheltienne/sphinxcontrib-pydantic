@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from sphinx.util import logging
 
 from sphinxcontrib.pydantic._autodoc import register_autodoc_handlers
+from sphinxcontrib.pydantic._compat import register_compat
 from sphinxcontrib.pydantic._config import register_config
 from sphinxcontrib.pydantic._directives import register_directives
 from sphinxcontrib.pydantic._version import __version__
@@ -48,6 +49,9 @@ def setup(app: Sphinx) -> dict[str, Any]:
 
     # Register autodoc event handlers
     register_autodoc_handlers(app)
+
+    # Register optional interop with legacy autodoc_pydantic inventories
+    register_compat(app)
 
     return {
         "version": __version__,

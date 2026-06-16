@@ -143,6 +143,27 @@ model counterparts.
 | `settings_signature_prefix` | `"settings"` | Prefix shown before setting name (directives only) |
 | `settings_hide_paramlist` | `True` | Hide `__init__` parameter list |
 
+### Interoperability Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `resolve_legacy_inventories` | `False` | Resolve cross-references into `objects.inv` files produced by the legacy `autodoc_pydantic` extension |
+
+`autodoc_pydantic` documents Pydantic objects under custom Python-domain object
+types (`py:pydantic_model`, `py:pydantic_field`, ...) rather than the stock
+`py:class`. A project built with this extension does not know those object types,
+so a cross-reference (e.g. via `intersphinx`) into a project still documented with
+`autodoc_pydantic` cannot resolve and a `nitpicky` build fails. Enable this option
+to register those object types (object types only, no directives) so such
+references resolve:
+
+```python
+# conf.py
+extensions = ["sphinx.ext.intersphinx", "sphinxcontrib.pydantic"]
+intersphinx_mapping = {"legacy": ("https://legacy.example/docs/", None)}
+sphinxcontrib_pydantic_resolve_legacy_inventories = True
+```
+
 ### Example Configuration
 
 ```python
