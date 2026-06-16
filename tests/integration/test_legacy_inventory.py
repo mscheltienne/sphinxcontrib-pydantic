@@ -71,7 +71,7 @@ def _build(
         'project = "Test"\n'
         'exclude_patterns = ["_build"]\n'
         f'intersphinx_mapping = {{"legacy": ("https://legacy.example/", '
-        f"r\"{inv}\")}}\n"
+        f'r"{inv}")}}\n'
         f"sphinxcontrib_pydantic_resolve_legacy_inventories = {resolve_legacy}\n"
     )
     (srcdir / "index.rst").write_text(
