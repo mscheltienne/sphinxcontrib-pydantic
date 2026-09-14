@@ -33,7 +33,7 @@ test = [
 
 [project]
 authors = [
-  {email = 'mathieu.scheltienne@gmail.com', name = 'Mathieu Scheltienne'},
+  { email = 'mathieu.scheltienne@gmail.com', name = 'Mathieu Scheltienne' },
 ]
 classifiers = [
   'Natural Language :: English',
@@ -64,7 +64,7 @@ keywords = [
 license = "MIT"
 license-files = ["LICENSE"]
 maintainers = [
-  {email = 'mathieu.scheltienne@gmail.com', name = 'Mathieu Scheltienne'},
+  { email = 'mathieu.scheltienne@gmail.com', name = 'Mathieu Scheltienne' },
 ]
 name = 'sphinxcontrib-pydantic'
 readme = 'README.md'
